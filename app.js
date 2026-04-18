@@ -60,7 +60,7 @@ let rouletteSpinning = false;
 
 // ===== INIT =====
 window.addEventListener("load", async () => {
-  await initAdmin();
+    try { await initAdmin(); } catch(e) { console.warn("initAdmin failed:", e); }
   setTimeout(() => {
     const ls = document.getElementById("loading-screen");
     ls.style.opacity = "0";
