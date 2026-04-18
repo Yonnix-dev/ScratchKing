@@ -8,14 +8,17 @@ let pendingTicketId = null;
 
 // ===== TICKETS =====
 const TICKETS = [
-  { id:"classic",  name:"Classique",   emoji:"🏟️", price:50,  xpWin:10, desc:"Gratte 3 cases, trouve 2 symboles identiques", type:"match3" },
-  { id:"lucky",    name:"Lucky 7",     emoji:"🍀", price:100, xpWin:20, desc:"Gratte pour trouver le 7 chanceux",            type:"find7" },
-  { id:"diamond",  name:"Diamant",     emoji:"💎", price:200, xpWin:40, desc:"Gratte la gemme cachée, gros gains !",         type:"diamond" },
-  { id:"gold",     name:"Or Massif",   emoji:"🥇", price:500, xpWin:100,desc:"Le ticket premium, jackpot possible",          type:"jackpot" },
-  { id:"rainbow",  name:"Arc-en-ciel", emoji:"🌈", price:75,  xpWin:15, desc:"Correspond aux couleurs pour gagner",          type:"colors" },
-  { id:"mystery",  name:"Mystère",     emoji:"🎭", price:150, xpWin:30, desc:"Tu ne sais pas ce que tu gratteras...",        type:"mystery" },
+  { id:"fortune", name:"Fortune Dorée", emoji:"💰", price:30, xpWin:8, desc:"3 lignes de symboles dorés – Aligne-les pour gagner !", type:"match3" },
+  { id:"treasure", name:"Chemin du Trésor", emoji:"🗺️", price:50, xpWin:12, desc:"Connecte le chemin de la carte au trésor", type:"match3" },
+  { id:"animals", name:"Monde des Animaux", emoji:"🦁", price:40, xpWin:10, desc:"Trouve 2 animaux identiques parmi les cases", type:"match3" },
+  { id:"stars", name:"Mystère des Étoiles", emoji:"⭐", price:60, xpWin:15, desc:"Gratte 3 étoiles de même intensité", type:"match3" },
+  { id:"world", name:"Voyage autour du Monde", emoji:"✈️", price:80, xpWin:20, desc:"Réunis 3 destinations pour une escapade complète", type:"match3" },
+  { id:"hero", name:"Super-Héros", emoji:"🦸", price:100, xpWin:25, desc:"Associe les héros avec leurs pouvoirs", type:"match3" },
+  { id:"puzzle", name:"Puzzle Mystère", emoji:"🧩", price:75, xpWin:18, desc:"Complète le puzzle caché sous les cases", type:"match3" },
+  { id:"maze", name:"Défi du Labyrinthe", emoji:"🌀", price:90, xpWin:22, desc:"Trouve le chemin du début à la fin", type:"match3" },
+  { id:"carnival", name:"Fête Foraine", emoji:"🎪", price:55, xpWin:14, desc:"Accumule 3 jeux gagnants de la fête", type:"match3" },
+  { id:"cooking", name:"Cuisine Gourmande", emoji:"👨‍🍳", price:70, xpWin:17, desc:"Réunis les ingrédients pour une recette complète", type:"match3" },
 ];
-
 const PRIZES = {
   classic: [0,0,0,75,125,200],
   lucky:   [0,0,0,0,300,600],
