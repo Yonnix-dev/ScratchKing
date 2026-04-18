@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ScratchKing 🎰</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- LOADING SCREEN -->
+  <div id="loading-screen">
+    <div class="loader-content">
+      <h1>🎰 ScratchKing</h1>
+      <div class="spinner"></div>
+      <p>Chargement...</p>
+    </div>
+  </div>
+
+  <!-- AUTH SCREEN -->
+  <div id="auth-screen" class="hidden">
+    <div class="auth-card">
+      <h1>🎰 ScratchKing</h1>
+      <div class="auth-tabs">
+        <button id="tab-login" class="tab active" onclick="showTab('login')">Connexion</button>
+        <button id="tab-register" class="tab" onclick="showTab('register')">Créer un compte</button>
+      </div>
+      <div id="form-login">
+        <input type="text" id="login-user" placeholder="Nom d'utilisateur" />
+        <input type="password" id="login-pass" placeholder="Mot de passe" />
+        <button class="btn-primary" onclick="handleLogin()">Se connecter</button>
+      </div>
+      <div id="form-register" class="hidden">
+        <input type="text" id="reg-user" placeholder="Nom d'utilisateur" />
+        <input type="password" id="reg-pass" placeholder="Mot de passe" />
+        <button class="btn-primary" onclick="handleRegister()">Créer le compte</button>
+      </div>
+      <p id="auth-error" class="error-msg"></p>
+    </div>
+  </div>
+
+  <!-- MAIN GAME -->
+  <div id="game-screen" class="hidden">
+    <header>
+      <div class="header-left"><h2>🎰 ScratchKing</h2></div>
+      <div class="header-center">
+        <span id="hud-credits">💰 500</span>
+        <span id="hud-xp">⭐ XP: 0</span>
+        <span id="hud-level">🏆 Niv. 1</span>
+        <span id="hud-debt" class="debt-badge hidden">💳 Dette: 0</span>
+      </div>
+      <div class="header-right">
+        <button class="btn-shop" onclick="openShop()">🛍️ Boutique</button>
+        <button class="btn-admin hidden" id="admin-btn" onclick="openAdmin()">🔧 Panel Admin</button>
+        <button class="btn-logout" onclick="logout()">Quitter</button>
+      </div>
+    </header>
+
+    <section id="tickets-section">
+      <h3>Choisissez votre ticket</h3>
+      <div class="tickets-grid" id="tickets-grid"></div>
+    </section>
+
+    <!-- SCRATCH MODAL -->
+    <div id="scratch-modal" class="modal hidden">
+      <div class="modal-content">
+        <h3 id="scratch-title"></h3>
+        <div class="canvas-wrap">
+          <canvas id="scratch-canvas" width="320" height="200"></canvas>
+        </div>
+        <div id="scratch-result" class="hidden"></div>
+        <button class="btn-secondary" onclick="closeScratch()">Fermer</button>
+      </div>
+    </div>
+
+    <!-- SHOP MODAL -->
+    <div id="shop-modal" class="modal hidden">
+      <div class="modal-content wide">
+        <h3>🛍️ Boutique</h3>
+        <div class="roulette-section">
+          <h4>🍡 Roulette Quotidienne</h4>
+          <div class="roulette-wrap">
+            <canvas id="roulette-canvas" width="300" height="300"></canvas>
+            <div class="roulette-pointer">▼</div>
+          </div>
+          <button class="btn-primary" id="spin-btn" onclick="spinRoulette()">Tourner !</button>
+          <p id="roulette-timer"></p>
+        </div>
+        <div class="skins-section">
+          <h4>🎨 Skins de thème</h4>
+          <div id="skins-list" class="skins-grid"></div>
+        </div>
+        <button class="btn-secondary" onclick="closeShop()">Fermer</button>
+      </div>
+    </div>
+
+    <!-- ADMIN PANEL -->
+    <div id="admin-modal" class="modal hidden">
+      <div class="modal-content wide">
+        <h3>🔧 Panel Admin</h3>
+        <div class="table-wrap">
+          <table id="admin-table">
+            <thead><tr><th>Pseudo</th><th>Crédits</th><th>XP</th><th>Niveau</th><th>Dette</th><th>Mot de passe</th></tr></thead>
+            <tbody id="admin-tbody"></tbody>
+          </table>
+        </div>
+        <button class="btn-secondary" onclick="closeAdmin()">Fermer</button>
+      </div>
+    </div>
+
+    <!-- LOAN POPUP -->
+    <div id="loan-popup" class="modal hidden">
+      <div class="modal-content small">
+        <div class="loan-icon">💳</div>
+        <h3>Besoin de crédits ?</h3>
+        <p>Tu n'as pas assez pour ce ticket.<br/>Emprunter <strong>100 crédits</strong> ?</p>
+        <p class="small-note">Remboursement auto dès que ton solde ≥ 2× ta dette totale.</p>
+        <button class="btn-primary" onclick="acceptLoan()">Emprunter 100 💰</button>
+        <button class="btn-secondary" onclick="closeLoan()">Non merci</button>
+      </div>
+    </div>
+
+    <!-- TOAST CONTAINER -->
+    <div id="toast-container"></div>
+  </div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
