@@ -1,15 +1,5 @@
-// firebase-config.js
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "REMPLACE_PAR_TON_API_KEY",
-  authDomain: "REMPLACE.firebaseapp.com",
-  projectId: "REMPLACE_PAR_TON_PROJECT_ID",
-  storageBucket: "REMPLACE.appspot.com",
-  messagingSenderId: "REMPLACE",
-  appId: "REMPLACE"
-};
-
-export const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app);
+// config.js - JSONBin.io configuration (replaces Firebase)
+// Bin ID et Master Key JSONBin
+export const JSONBIN_KEY = "$2a$10$ODhExoERk8wURKK9AnmVbOXZ3tD7r7EuMWZaZeohVhjzgCwhwqNfK";
+export const JSONBIN_BIN_ID = "69e3fb87aaba882197134321";
+export const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_BIN_ID}`;
