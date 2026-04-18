@@ -9,35 +9,32 @@
 <body>
 
   <!-- LOADING SCREEN -->
-  <div id="loading-screen">      <div class="loader-content">      <h1>🎰 ScratchKing</h1>
+  <div id="loading-screen">
+    <div class="loader-content">
+      <h1>🎰 ScratchKing</h1>
       <div class="spinner"></div>
       <p>Chargement...</p>
     </div>
   </div>
 
   <!-- AUTH SCREEN -->
-  <!-- AUTH SCREEN -->
   <div id="auth-screen" class="hidden">
-    <div class="auth-container">
+    <div class="auth-card">
       <h1>🎰 ScratchKing</h1>
-      
       <div class="auth-tabs">
         <button id="tab-login" class="tab active" onclick="showTab('login')">Connexion</button>
         <button id="tab-register" class="tab" onclick="showTab('register')">Créer un compte</button>
       </div>
-      
       <div id="form-login">
-        <input type="text" id="login-user" placeholder="Nom d'utilisateur">
-        <input type="password" id="login-pass" placeholder="Mot de passe">
+        <input type="text" id="login-user" placeholder="Nom d'utilisateur" />
+        <input type="password" id="login-pass" placeholder="Mot de passe" />
         <button class="btn-primary" onclick="handleLogin()">Se connecter</button>
       </div>
-      
       <div id="form-register" class="hidden">
-        <input type="text" id="reg-user" placeholder="Nom d'utilisateur">
-        <input type="password" id="reg-pass" placeholder="Mot de passe">
+        <input type="text" id="reg-user" placeholder="Nom d'utilisateur" />
+        <input type="password" id="reg-pass" placeholder="Mot de passe" />
         <button class="btn-primary" onclick="handleRegister()">Créer le compte</button>
       </div>
-      
       <p id="auth-error" class="error-msg"></p>
     </div>
   </div>
