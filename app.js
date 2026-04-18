@@ -251,6 +251,7 @@ function launchScratch(ticket) {
 
   function scratch(x,y) {
     oCtx.globalCompositeOperation = "destination-out";
+      let scratchCount = 0;
     oCtx.beginPath();
     oCtx.arc(x,y,30,0,Math.PI*2);
     oCtx.fill();
@@ -268,24 +269,12 @@ function launchScratch(ticket) {
     ctx.fillText(isWin ? "Félicitations !" : "Meilleure chance la prochaine fois", canvas.width/2, canvas.height/2 + 20);
     ctx.drawImage(overlay,0,0);
     if (!revealed) {
-      const data = oCtx.getImageData(0,0,overlay.width,overlay.height).data;
-      let transparent = 0;
-      for(let i=3;i<data.length;i+=4) if(data[i]===0) transparent++;
-      if (transparent/totalPixels > 0.5) {
+            scratchCount++;
+      if (scratchCount > 50) {
         revealed = true;
         overlay.remove();
-        ctx.clearRect(0,0,canvas.width,canvas.height);
-        ctx.fillStyle = "#1a1a2e";
-        ctx.fillRect(0,0,canvas.width,canvas.height);
-        ctx.font = "bold 26px Segoe UI";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillStyle = isWin ? "#ffd700" : "#ff6b6b";
-        ctx.fillText(isWin ? `🎉 +${prize} 💰` : "😔 Perdu", canvas.width/2, canvas.height/2 - 10);
-        ctx.font = "16px Segoe UI";
-        ctx.fillStyle = "rgba(255,255,255,0.5)";
-        ctx.fillText(isWin ? "Félicitations !" : "Meilleure chance la prochaine fois", canvas.width/2, canvas.height/2 + 20);
         showResult(isWin, prize, ticket);
+      }
       }
     }
   }
