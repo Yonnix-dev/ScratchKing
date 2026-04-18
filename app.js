@@ -8,23 +8,29 @@ let pendingTicketId = null;
 
 // ===== TICKETS =====
 const TICKETS = [
-  { id:"classic",  name:"Classique",   emoji:"🏟️", price:50,  xpWin:10, desc:"Gratte 3 cases, trouve 2 symboles identiques", type:"match3" },
-  { id:"lucky",    name:"Lucky 7",     emoji:"🍀", price:100, xpWin:20, desc:"Gratte pour trouver le 7 chanceux",            type:"find7" },
-  { id:"diamond",  name:"Diamant",     emoji:"💎", price:200, xpWin:40, desc:"Gratte la gemme cachée, gros gains !",         type:"diamond" },
-  { id:"gold",     name:"Or Massif",   emoji:"🥇", price:500, xpWin:100,desc:"Le ticket premium, jackpot possible",          type:"jackpot" },
-  { id:"rainbow",  name:"Arc-en-ciel", emoji:"🌈", price:75,  xpWin:15, desc:"Correspond aux couleurs pour gagner",          type:"colors" },
-  { id:"mystery",  name:"Mystère",     emoji:"🎭", price:150, xpWin:30, desc:"Tu ne sais pas ce que tu gratteras...",        type:"mystery" },
+  { id:"fortune", name:"Fortune Dorée", emoji:"💰", price:30, xpWin:8, desc:"3 lignes de symboles dorés – Aligne-les pour gagner !", type:"lines" },
+  { id:"treasure", name:"Chemin du Trésor", emoji:"🗺️", price:50, xpWin:12, desc:"Connecte le chemin de la carte au trésor", type:"path" },
+  { id:"animals", name:"Monde des Animaux", emoji:"🦁", price:40, xpWin:10, desc:"Trouve 2 animaux identiques parmi les cases", type:"match2" },
+  { id:"stars", name:"Mystère des Étoiles", emoji:"⭐", price:60, xpWin:15, desc:"Gratte 3 étoiles de même intensité", type:"match3" },
+  { id:"world", name:"Voyage autour du Monde", emoji:"✈️", price:80, xpWin:20, desc:"Réunis 3 destinations pour une escapade complète", type:"collect3" },
+  { id:"hero", name:"Super-Héros", emoji:"🦸", price:100, xpWin:25, desc:"Associe les héros avec leurs pouvoirs", type:"match" },
+  { id:"puzzle", name:"Puzzle Mystère", emoji:"🧩", price:75, xpWin:18, desc:"Complète le puzzle caché sous les cases", type:"puzzle" },
+  { id:"maze", name:"Défi du Labyrinthe", emoji:"🌀", price:90, xpWin:22, desc:"Trouve le chemin du début à la fin", type:"maze" },
+  { id:"carnival", name:"Fête Foraine", emoji:"🎪", price:55, xpWin:14, desc:"Accumule 3 jeux gagnants de la fête", type:"carnival" },
+  { id:"cooking", name:"Cuisine Gourmande", emoji:"👨‍🍳", price:70, xpWin:17, desc:"Réunis les ingrédients pour une recette complète", type:"recipe" },
 ];
-
 const PRIZES = {
-  classic: [0,0,0,75,125,200],
-  lucky:   [0,0,0,0,300,600],
-  diamond: [0,0,0,0,500,1200],
-  gold:    [0,0,0,0,1200,2500,6000],
-  rainbow: [0,0,150,250,400],
-  mystery: [0,0,0,250,500,1000]
+  fortune: [0,0,0,40,60,80],
+  treasure: [0,0,0,70,100,130],
+  animals: [0,0,0,50,80,100],
+  stars: [0,0,0,80,120,160],
+  world: [0,0,0,110,160,200],
+  hero: [0,0,0,140,200,250],
+  puzzle: [0,0,0,100,150,180],
+  maze: [0,0,0,120,180,220],
+  carnival: [0,0,0,75,110,140],
+  cooking: [0,0,0,95,140,170]
 };
-
 // ===== SKINS =====
 const SKINS = [
   { id:"default", name:"Défaut",    price:0,    emoji:"⚪" },
@@ -65,12 +71,10 @@ window.addEventListener("load", async () => {
     const ls = document.getElementById("loading-screen");
     ls.style.opacity = "0";
     setTimeout(() => { ls.classList.add("hidden"); show("auth-screen"); }, 600);
-  }, 1800);
-});
+  }, 600);});
 
 // ===== AUTH =====
-window.showTab = (tab) => {
-  g("form-login").classList.toggle("hidden", tab !== "login");
+  }, 600);  g("form-login").classList.toggle("hidden", tab !== "login");
   g("form-register").classList.toggle("hidden", tab !== "register");
   g("tab-login").classList.toggle("active", tab === "login");
   g("tab-register").classList.toggle("active", tab === "register");
