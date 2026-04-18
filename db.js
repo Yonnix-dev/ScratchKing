@@ -1,11 +1,32 @@
-// db.js - Database functions
-import { db } from "./firebase-config.js";
-import { doc, getDoc, setDoc, updateDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+// db.js - Database functions via JSONBin.io
+import { JSONBIN_KEY, JSONBIN_URL } from "./firebase-config.js";
+
+const HEADERS = {
+  "Content-Type": "application/json",
+  "X-Master-Key": JSONBIN_KEY,
+  "X-Bin-Meta": "false"
+};
+
+// Charge tout le bin
+async function loadBin() {
+  const res = await fetch(JSONBIN_URL, { headers: HEADERS });
+  const json = await res.json();
+  return json.record || json;
+}
+
+// Sauvegarde tout le bin
+async function saveBin(data) {
+  await fetch(JSONBIN_URL, {
+    method: "PUT",
+    headers: HEADERS,
+    body: JSON.stringify(data)
+  });
+}
 
 export async function createAccount(username, password) {
-  const ref = doc(db, "users", username.toLowerCase());
-  const snap = await getDoc(ref);
-  if (snap.exists()) return { error: "Ce pseudo est déjà pris." };
+  const bin = await loadBin();
+  const key = username.toLowerCase();
+  if (bin.users && bin.users[key]) return { error: "Ce pseudo est déjà pris." };
   const data = {
     username,
     password,
@@ -18,34 +39,40 @@ export async function createAccount(username, password) {
     lastRoulette: null,
     createdAt: Date.now()
   };
-  await setDoc(ref, data);
+  if (!bin.users) bin.users = {};
+  bin.users[key] = data;
+  await saveBin(bin);
   return { success: true, data };
 }
 
 export async function loginAccount(username, password) {
-  const ref = doc(db, "users", username.toLowerCase());
-  const snap = await getDoc(ref);
-  if (!snap.exists()) return { error: "Compte introuvable." };
-  const data = snap.data();
+  const bin = await loadBin();
+  const key = username.toLowerCase();
+  if (!bin.users || !bin.users[key]) return { error: "Compte introuvable." };
+  const data = bin.users[key];
   if (data.password !== password) return { error: "Mot de passe incorrect." };
   return { success: true, data };
 }
 
 export async function savePlayer(username, data) {
-  const ref = doc(db, "users", username.toLowerCase());
-  await updateDoc(ref, data);
+  const bin = await loadBin();
+  const key = username.toLowerCase();
+  if (!bin.users) bin.users = {};
+  bin.users[key] = data;
+  await saveBin(bin);
 }
 
 export async function getAllPlayers() {
-  const snap = await getDocs(collection(db, "users"));
-  return snap.docs.map(d => d.data());
+  const bin = await loadBin();
+  if (!bin.users) return [];
+  return Object.values(bin.users);
 }
 
 export async function initAdmin() {
-  const ref = doc(db, "users", "admin");
-  const snap = await getDoc(ref);
-  if (!snap.exists()) {
-    await setDoc(ref, {
+  const bin = await loadBin();
+  if (!bin.users) bin.users = {};
+  if (!bin.users["admin"]) {
+    bin.users["admin"] = {
       username: "ADMIN",
       password: "135975",
       credits: 999999,
@@ -55,7 +82,8 @@ export async function initAdmin() {
       skin: "default",
       ownedSkins: ["default"],
       lastRoulette: null,
-      createdAt: Date.now()
-    });
+      createdAt: 0
+    };
+    await saveBin(bin);
   }
 }
