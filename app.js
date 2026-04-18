@@ -7,28 +7,31 @@ let pendingTicketCost = 0;
 let pendingTicketId = null;
 
 // ===== TICKETS =====
-const TICKETS = [
-  { id:"fortune", name:"Fortune Dorée", emoji:"💰", price:30, xpWin:8, desc:"3 lignes de symboles dorés – Aligne-les pour gagner !", type:"match3" },
-  { id:"treasure", name:"Chemin du Trésor", emoji:"🗺️", price:50, xpWin:12, desc:"Connecte le chemin de la carte au trésor", type:"match3" },
-  { id:"animals", name:"Monde des Animaux", emoji:"🦁", price:40, xpWin:10, desc:"Trouve 2 animaux identiques parmi les cases", type:"match3" },
-  { id:"stars", name:"Mystère des Étoiles", emoji:"⭐", price:60, xpWin:15, desc:"Gratte 3 étoiles de même intensité", type:"match3" },
-  { id:"world", name:"Voyage autour du Monde", emoji:"✈️", price:80, xpWin:20, desc:"Réunis 3 destinations pour une escapade complète", type:"match3" },
-  { id:"hero", name:"Super-Héros", emoji:"🦸", price:100, xpWin:25, desc:"Associe les héros avec leurs pouvoirs", type:"match3" },
-  { id:"puzzle", name:"Puzzle Mystère", emoji:"🧩", price:75, xpWin:18, desc:"Complète le puzzle caché sous les cases", type:"match3" },
-  { id:"maze", name:"Défi du Labyrinthe", emoji:"🌀", price:90, xpWin:22, desc:"Trouve le chemin du début à la fin", type:"match3" },
-  { id:"carnival", name:"Fête Foraine", emoji:"🎪", price:55, xpWin:14, desc:"Accumule 3 jeux gagnants de la fête", type:"match3" },
-  { id:"cooking", name:"Cuisine Gourmande", emoji:"👨‍🍳", price:70, xpWin:17, desc:"Réunis les ingrédients pour une recette complète", type:"match3" },
+  const TICKETS = [
+{ id:"fortune",  name:"Fortune Dorée",       emoji:"🪙", price:30,  xpWin:8,  desc:"Aligne 3 symboles dorés pour gagner !",          type:"lines" },
+  { id:"treasure", name:"Chemin du Trésor",     emoji:"🗺️", price:50,  xpWin:12, desc:"Connecte le chemin de la carte au trésor",       type:"path" },
+  { id:"animals",  name:"Monde des Animaux",    emoji:"🐾", price:40,  xpWin:10, desc:"Trouve 2 animaux identiques parmi les cases",    type:"match2" },
+  { id:"stars",    name:"Mystère des Étoiles",  emoji:"⭐", price:60,  xpWin:15, desc:"Gratte 3 étoiles de même intensité",            type:"match3" },
+  { id:"world",    name:"Voyage autour du Monde",emoji:"✈️", price:80,  xpWin:20, desc:"Réunis 3 destinations pour une escapade",        type:"match3" },
+  { id:"hero",     name:"Super-Héros",          emoji:"🦸", price:100, xpWin:25, desc:"Associe les héros avec leurs pouvoirs",          type:"match3" },
+  { id:"puzzle",   name:"Puzzle Mystère",        emoji:"🧩", price:75,  xpWin:18, desc:"Complète le puzzle caché sous les cases",        type:"match3" },
+  { id:"maze",     name:"Défi du Labyrinthe",   emoji:"🌀", price:90,  xpWin:22, desc:"Trouve le chemin du début à la fin",            type:"match3" },
+  { id:"carnival", name:"Fête Foraine",          emoji:"🎡", price:55,  xpWin:14, desc:"Accumule 3 jeux gagnants de la fête",           type:"match3" },
+  { id:"cooking",  name:"Cuisine Gourmande",     emoji:"👨‍🍳", price:70,  xpWin:17, desc:"Réunis les ingrédients pour une recette",        type:"match3" },
 ];
 const PRIZES = {
-  classic: [0,0,0,75,125,200],
-  lucky:   [0,0,0,0,300,600],
-  diamond: [0,0,0,0,500,1200],
-  gold:    [0,0,0,0,1200,2500,6000],
-  rainbow: [0,0,150,250,400],
-  mystery: [0,0,0,250,500,1000]
+  fortune:  [0,0,0,40,60,80],
+  treasure: [0,0,0,70,100,130],
+  animals:  [0,0,0,50,80,100],
+  stars:    [0,0,0,80,120,160],
+  world:    [0,0,0,110,160,200],
+  hero:     [0,0,0,140,200,250],
+  puzzle:   [0,0,0,100,150,180],
+  maze:     [0,0,0,120,180,220],
+  carnival: [0,0,0,75,110,140],
+  cooking:  [0,0,0,95,140,170]
 };
-
-// ===== SKINS =====
+ ===== SKINS =====
 const SKINS = [
   { id:"default", name:"Défaut",    price:0,    emoji:"⚪" },
   { id:"neon",    name:"Néon",      price:500,  emoji:"🟣" },
