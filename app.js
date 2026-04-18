@@ -71,8 +71,7 @@ window.addEventListener("load", async () => {
     const ls = document.getElementById("loading-screen");
     ls.style.opacity = "0";
     setTimeout(() => { ls.classList.add("hidden"); show("auth-screen"); }, 600);
-  }, 600);});
-
+});
 // ===== AUTH =====
   }, 600);  g("form-login").classList.toggle("hidden", tab !== "login");
   g("form-register").classList.toggle("hidden", tab !== "register");
