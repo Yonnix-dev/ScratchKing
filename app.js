@@ -254,10 +254,11 @@ function launchScratch(ticket) {
   let scratching = false;
   let revealed = false;
   const totalPixels = overlay.width * overlay.height;
+        let scratchCount = 0;
+
 
   function scratch(x,y) {
     oCtx.globalCompositeOperation = "destination-out";
-      let scratchCount = 0;
     oCtx.beginPath();
     oCtx.arc(x,y,30,0,Math.PI*2);
     oCtx.fill();
