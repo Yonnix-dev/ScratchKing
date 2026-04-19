@@ -1,135 +1,160 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ScratchKing 🎰</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScratchKing 🎰</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <!-- LOADING -->
-  <div id="loading-screen">
-    <h1>🎰 ScratchKing</h1>
-    <div class="spinner"></div>
-    <p>Chargement...</p>
-  </div>
-
-  <!-- AUTH -->
-  <div id="auth-screen" class="hidden">
-    <div class="auth-card">
-      <h1>🎰 ScratchKing</h1>
-      <div class="auth-tabs">
-        <button class="tab active" id="tab-login">Connexion</button>
-        <button class="tab" id="tab-register">Inscription</button>
-      </div>
-      
-      <div id="form-login">
-        <input type="text" id="login-user" placeholder="Nom d'utilisateur">
-        <input type="password" id="login-pass" placeholder="Mot de passe">
-        <button class="btn-primary" id="btn-login">Se connecter</button>
-      </div>
-
-      <div id="form-register" class="hidden">
-        <input type="text" id="reg-user" placeholder="Nom d'utilisateur">
-        <input type="password" id="reg-pass" placeholder="Mot de passe">
-        <button class="btn-primary" id="btn-register">Créer mon compte</button>
-      </div>
-      
-      <p id="auth-error" style="color:#ff6b6b; text-align:center; margin-top:1rem;"></p>
-    </div>
-  </div>
-
-  <!-- GAME SCREEN -->
-  <div id="game-screen">
-    <div class="hud">
-      <div class="hud-item"><span id="hud-credits">💰 0</span></div>
-      <div class="hud-item"><span id="hud-xp">⭐ XP: 0</span></div>
-      <div class="hud-item"><span id="hud-level">🏆 Niv. 1</span></div>
-      <div class="hud-item hidden" id="hud-debt" style="color:#ff6b6b">💳 Dette: 0</div>
-      
-      <div style="display:flex; gap:0.5rem">
-        <button class="btn-shop" id="shop-btn">🛒 Boutique</button>
-        <button class="btn-admin hidden" id="admin-btn">⚙️ ADMIN</button>
-        <button class="btn-admin" id="logout-btn" style="background:#ff6b6b">Logout</button>
-      </div>
+    <!-- LOADING -->
+    <div id="loading-screen">
+        <h1>🎰 ScratchKing</h1>
+        <div class="spinner"></div>
+        <p>Chargement...</p>
     </div>
 
-    <div class="tickets-grid" id="tickets-grid"></div>
-  </div>
+    <!-- AUTH -->
+    <div id="auth-screen" class="hidden">
+        <div class="auth-card">
+            <h1>🎰 ScratchKing</h1>
+            <div class="auth-tabs">
+                <button class="tab active" id="tab-login">Connexion</button>
+                <button class="tab" id="tab-register">Inscription</button>
+            </div>
+            
+            <div id="form-login">
+                <input type="text" id="login-user" placeholder="Nom d'utilisateur">
+                <input type="password" id="login-pass" placeholder="Mot de passe">
+                <button class="btn-primary" id="btn-login">Se connecter</button>
+            </div>
 
-  <!-- SCRATCH MODAL -->
-  <div id="scratch-modal" class="modal hidden">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 id="scratch-title">Ticket</h2>
-        <button class="btn-close" id="close-scratch">&times;</button>
-      </div>
-      <div id="scratch-area">
-        <canvas id="scratch-canvas"></canvas>
-        <div id="scratch-result" class="scratch-result hidden"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- SHOP MODAL -->
-  <div id="shop-modal" class="modal hidden">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>🛒 Boutique & Bonus</h2>
-        <button class="btn-close" id="close-shop">&times;</button>
-      </div>
-      
-      <div style="margin-bottom:2rem">
-        <h3>🎡 Roulette Journalière</h3>
-        <div style="display:flex; flex-direction:column; align-items:center; gap:1rem; margin-top:1rem">
-          <canvas id="roulette-canvas" width="250" height="250"></canvas>
-          <p id="roulette-timer"></p>
-          <button class="btn-primary" id="spin-btn" style="width:auto; padding:0.8rem 2rem">Lancer !</button>
+            <div id="form-register" class="hidden">
+                <input type="text" id="reg-user" placeholder="Nom d'utilisateur">
+                <input type="password" id="reg-pass" placeholder="Mot de passe">
+                <button class="btn-primary" id="btn-register">Créer mon compte</button>
+            </div>
+            
+            <p id="auth-error" style="color: #ff6b6b; text-align: center; margin-top: 1rem;"></p>
         </div>
-      </div>
-
-      <div>
-        <h3>🎨 Personnalisation (Skins)</h3>
-        <div id="skins-list" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(120px, 1fr)); gap:1rem; margin-top:1rem"></div>
-      </div>
     </div>
-  </div>
 
-  <!-- ADMIN MODAL -->
-  <div id="admin-modal" class="modal hidden">
-    <div class="modal-content" style="max-width:800px">
-      <div class="modal-header">
-        <h2>⚙️ Panel Admin</h2>
-        <button class="btn-close" id="close-admin">&times;</button>
-      </div>
-      <div style="overflow-x:auto">
-        <table class="stats-table">
-          <thead>
-            <tr><th>Pseudo</th><th>Crédits</th><th>XP</th><th>Niv.</th><th>Dette</th><th>MDP</th></tr>
-          </thead>
-          <tbody id="admin-tbody"></tbody>
-        </table>
-      </div>
+    <!-- GAME SCREEN -->
+    <div id="game-screen" class="hidden">
+        <div class="hud">
+            <div class="hud-item" id="hud-credits">💰 500</div>
+            <div class="hud-item" id="hud-xp">⭐ XP: 0</div>
+            <div class="hud-item" id="hud-level">🏆 Niv. 1</div>
+            <div class="hud-item hidden" id="hud-debt" style="color:#ff6b6b">💳 Dette: 0</div>
+            
+            <div class="hud-actions">
+                <button class="btn-icon" id="leaderboard-btn" title="Classement">🏆</button>
+                <button class="btn-icon" id="shop-btn">🛒 Boutique</button>
+                <button class="btn-icon hidden" id="admin-btn">⚙️ ADMIN</button>
+                <button class="btn-icon logout" id="logout-btn">🚪 Logout</button>
+            </div>
+        </div>
+
+        <div id="tickets-grid">
+            <!-- Dynamically filled -->
+        </div>
     </div>
-  </div>
 
-  <!-- LOAN MODAL -->
-  <div id="loan-modal" class="modal hidden">
-    <div class="modal-content" style="max-width:400px; text-align:center">
-      <h2 style="color:#ff6b6b; margin-bottom:1rem">💰 Besoin d'un prêt ?</h2>
-      <p>Tu n'as plus assez de crédits. Veux-tu emprunter 100 💰 ?</p>
-      <p style="font-size:0.8rem; color:var(--text-dim); margin:1rem 0">(La banque se remboursera automatiquement dès que possible)</p>
-      <div style="display:flex; gap:1rem; margin-top:1.5rem">
-        <button class="btn-primary" id="accept-loan">Accepter</button>
-        <button class="btn-primary" id="decline-loan" style="background:#aaa">Refuser</button>
-      </div>
+    <!-- SCRATCH MODAL -->
+    <div id="scratch-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="scratch-title">Ticket</h2>
+                <button class="btn-close" id="close-scratch">&times;</button>
+            </div>
+            <div id="scratch-area">
+                <canvas id="scratch-canvas" width="400" height="250"></canvas>
+                <div id="scratch-result" class="scratch-result hidden"></div>
+            </div>
+        </div>
     </div>
-  </div>
 
-  <!-- TOAST CONTAINER -->
-  <div id="toast-container" style="position:fixed; bottom:20px; right:20px; z-index:10001; pointer-events:none"></div>
+    <!-- SHOP MODAL -->
+    <div id="shop-modal" class="modal hidden">
+        <div class="modal-content shop-content">
+            <div class="modal-header">
+                <h2>Boutique & Roulette</h2>
+                <button class="btn-close" id="close-shop">&times;</button>
+            </div>
+            
+            <div class="shop-grid">
+                <div class="roulette-section">
+                    <h3>🎰 Roulette Journalière</h3>
+                    <div class="roulette-container">
+                        <canvas id="roulette-canvas" width="200" height="200"></canvas>
+                        <button class="btn-primary" id="spin-btn">TOURNER !</button>
+                        <p id="roulette-timer"></p>
+                    </div>
+                </div>
+                
+                <div class="skins-section">
+                    <h3>🎨 Personnalisation</h3>
+                    <div id="skins-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-  <script src="app.js"></script>
+    <!-- LEADERBOARD MODAL -->
+    <div id="leaderboard-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🏆 Classement Mondial</h2>
+                <button class="btn-close" id="close-leaderboard">&times;</button>
+            </div>
+            <div class="leaderboard-tabs">
+                <button class="tab active" data-type="credits">💰 Riches</button>
+                <button class="tab" data-type="xp">⭐ Niveau</button>
+            </div>
+            <table class="stats-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Joueur</th>
+                        <th id="lb-val-header">Crédits</th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboard-tbody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- LOAN MODAL -->
+    <div id="loan-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2>💸 Plus de crédits ?</h2>
+            <p>On peut te prêter 100 💰, mais il faudra rembourser avec les gains !</p>
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button class="btn-primary" id="accept-loan">Accepter</button>
+                <button class="btn-primary" id="decline-loan" style="background:#444">Refuser</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADMIN MODAL -->
+    <div id="admin-modal" class="modal hidden">
+        <div class="modal-content" style="max-width:800px">
+            <div class="modal-header">
+                <h2>⚙️ Panneau Admin</h2>
+                <button class="btn-close" id="close-admin">&times;</button>
+            </div>
+            <table class="stats-table">
+                <thead>
+                    <tr><th>User</th><th>💰</th><th>XP</th><th>Pass</th></tr>
+                </thead>
+                <tbody id="admin-tbody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <script src="app.js"></script>
 </body>
 </html>
