@@ -1,129 +1,234 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>ScratchKing 🎰</title>
-  <link rel="stylesheet" href="style.css" />
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>ScratchKing 🎰</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --accent:#a259ff;--accent2:#ff6b6b;--gold:#ffd700;
+  --bg:#0d0d1a;--bg2:#1a0d2e;--glass:rgba(255,255,255,0.07);
+  --glass-border:rgba(255,255,255,0.15);--text:#f0f0f0;--text-dim:#aaa;
+  --radius:16px;--shadow:0 8px 32px rgba(0,0,0,0.4)
+}
+body{background:linear-gradient(135deg,var(--bg),var(--bg2));color:var(--text);font-family:'Segoe UI',sans-serif;min-height:100vh;overflow-x:hidden}
+.hidden{display:none!important}
+/* AUTH */
+#auth-screen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--bg),var(--bg2));z-index:100}
+.auth-card{background:rgba(26,13,46,0.95);border:2px solid var(--glass-border);border-radius:20px;padding:2.5rem 2rem;width:90%;max-width:420px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,0.5)}
+.auth-card h1{font-size:2.2rem;margin-bottom:1.5rem;background:linear-gradient(135deg,var(--accent),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.auth-tabs{display:flex;gap:.8rem;margin-bottom:1.5rem}
+.tab{flex:1;padding:.7rem;background:var(--glass);border:1px solid var(--glass-border);border-radius:10px;color:var(--text-dim);cursor:pointer;transition:all .3s;font-size:.95rem}
+.tab.active{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 4px 15px rgba(162,89,255,.3)}
+.auth-card input{width:100%;padding:.9rem;margin-bottom:.9rem;background:rgba(255,255,255,0.05);border:1px solid var(--glass-border);border-radius:10px;color:#fff;font-size:1rem}
+.auth-card input:focus{outline:none;border-color:var(--accent)}
+.auth-card input::placeholder{color:var(--text-dim)}
+.btn-primary{width:100%;padding:.9rem;background:linear-gradient(135deg,var(--accent),#7c3aed);border:none;border-radius:10px;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;transition:all .3s;margin-top:.3rem}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(162,89,255,.4)}
+.error-msg{color:var(--accent2);margin-top:.8rem;font-size:.9rem;min-height:1.2rem}
+/* HEADER */
+header{display:flex;align-items:center;justify-content:space-between;padding:.8rem 1.5rem;background:var(--glass);border-bottom:1px solid var(--glass-border);backdrop-filter:blur(16px);position:sticky;top:0;z-index:100;flex-wrap:wrap;gap:.5rem}
+.header-left h2{font-size:1.3rem}
+.header-center{display:flex;gap:.8rem;font-size:.9rem;flex-wrap:wrap}
+.header-center span{background:rgba(255,255,255,0.06);padding:.35rem .9rem;border-radius:20px;border:1px solid var(--glass-border);white-space:nowrap}
+#hud-debt{background:rgba(255,107,107,0.15)!important;color:var(--accent2);border-color:var(--accent2)!important}
+.header-right{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}
+.btn-shop{padding:.4rem 1rem;background:linear-gradient(135deg,#ffd700,#ffd200);border:none;border-radius:8px;color:#111;font-weight:700;cursor:pointer;transition:transform .2s}
+.btn-shop:hover{transform:scale(1.05)}
+.btn-admin{padding:.4rem 1rem;background:linear-gradient(135deg,#f7971e,#ffd200);border:none;border-radius:8px;color:#fff;font-weight:700;cursor:pointer}
+.btn-logout{padding:.4rem .9rem;background:transparent;border:1px solid var(--glass-border);border-radius:8px;color:var(--text-dim);cursor:pointer}
+/* TICKETS */
+#tickets-section{padding:1.5rem}
+#tickets-section h3{margin-bottom:1rem;font-size:1.2rem;color:var(--text-dim)}
+#tickets-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1rem}
+.ticket-card{background:var(--glass);border:1px solid var(--glass-border);border-radius:var(--radius);padding:1.2rem;text-align:center;cursor:pointer;transition:all .3s;}
+.ticket-card:hover{transform:translateY(-4px);border-color:var(--accent);box-shadow:0 8px 25px rgba(162,89,255,.25)}
+.ticket-card .t-emoji{font-size:2.2rem;margin-bottom:.5rem}
+.ticket-card h4{font-size:1rem;margin-bottom:.3rem}
+.ticket-card .t-price{color:var(--gold);font-weight:700;margin:.3rem 0}
+.ticket-card .t-desc{font-size:.78rem;color:var(--text-dim)}
+/* MODAL SCRATCH */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;z-index:200;padding:1rem}
+.modal-box{background:linear-gradient(135deg,#1a0d2e,#0d0d1a);border:2px solid var(--glass-border);border-radius:20px;padding:1.5rem;max-width:480px;width:100%;text-align:center;position:relative}
+.modal-box h2{margin-bottom:1rem;font-size:1.3rem}
+.scratch-wrap{position:relative;width:320px;height:200px;margin:0 auto 1rem;border-radius:12px;overflow:hidden}
+#scratch-canvas{display:block;border-radius:12px}
+.scratch-result{font-size:1.3rem;font-weight:700;padding:.8rem;border-radius:10px;margin-top:.8rem}
+.scratch-result.win{background:rgba(255,215,0,.15);color:var(--gold);border:1px solid var(--gold)}
+.scratch-result.lose{background:rgba(255,107,107,.1);color:var(--accent2);border:1px solid var(--accent2)}
+.btn-close{position:absolute;top:.8rem;right:.8rem;background:transparent;border:none;color:var(--text-dim);font-size:1.4rem;cursor:pointer}
+/* SHOP */
+.shop-section{margin-bottom:1.5rem}
+.shop-section h4{margin-bottom:.8rem;font-size:1rem;color:var(--text-dim)}
+.roulette-wrap{display:flex;flex-direction:column;align-items:center;gap:.8rem}
+#roulette-canvas{border:3px solid var(--glass-border);border-radius:50%}
+#roulette-timer{font-size:.85rem;color:var(--text-dim)}
+.spin-btn{padding:.7rem 2rem;background:linear-gradient(135deg,var(--accent),#7c3aed);border:none;border-radius:10px;color:#fff;font-weight:700;cursor:pointer}
+.spin-btn:disabled{opacity:.5;cursor:not-allowed}
+.skins-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:.7rem}
+.skin-item{background:var(--glass);border:1px solid var(--glass-border);border-radius:10px;padding:.8rem;text-align:center;cursor:pointer;transition:all .3s;font-size:.85rem}
+.skin-item:hover{border-color:var(--accent)}
+.skin-item.owned{border-color:var(--accent);background:rgba(162,89,255,.1)}
+.skin-item .s-emoji{font-size:1.5rem;margin-bottom:.3rem}
+/* ADMIN */
+#admin-table{width:100%;border-collapse:collapse;font-size:.85rem;margin-top:1rem}
+#admin-table th{background:rgba(162,89,255,.2);padding:.5rem;text-align:left;font-size:.8rem}
+#admin-table td{padding:.5rem;border-bottom:1px solid var(--glass-border)}
+/* LOAN */
+.loan-box{background:var(--glass);border:1px solid var(--accent2);border-radius:14px;padding:1.2rem;text-align:center}
+.loan-box p{margin-bottom:.6rem;font-size:.95rem}
+.loan-actions{display:flex;gap:.8rem;justify-content:center;margin-top:.8rem}
+.btn-loan{padding:.7rem 1.5rem;background:linear-gradient(135deg,var(--accent),#7c3aed);border:none;border-radius:10px;color:#fff;font-weight:700;cursor:pointer}
+.btn-no{padding:.7rem 1.5rem;background:var(--glass);border:1px solid var(--glass-border);border-radius:10px;color:var(--text-dim);cursor:pointer}
+/* TOAST */
+#toast-container{position:fixed;bottom:1.5rem;right:1.5rem;z-index:999;display:flex;flex-direction:column;gap:.5rem}
+.toast{background:rgba(26,13,46,.95);border:1px solid var(--glass-border);padding:.7rem 1.2rem;border-radius:10px;font-size:.9rem;animation:slideIn .3s ease;box-shadow:var(--shadow)}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:none;opacity:1}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{width:50px;height:50px;border:4px solid var(--glass-border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 1rem}
+.loader-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh}
+.loader-wrap h1{font-size:2.5rem;margin-bottom:1rem;background:linear-gradient(135deg,var(--accent),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+</style>
 </head>
 <body>
+<!-- AUTH -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <h1>🎰 ScratchKing</h1>
+    <div class="auth-tabs">
+      <button class="tab active" id="tab-login" onclick="showTab('login')">Connexion</button>
+      <button class="tab" id="tab-register" onclick="showTab('register')">Créer un compte</button>
+    </div>
+    <div id="form-login">
+      <input type="text" id="login-user" placeholder="Nom d'utilisateur">
+      <input type="password" id="login-pass" placeholder="Mot de passe">
+      <button class="btn-primary" onclick="handleLogin()">Se connecter</button>
+    </div>
+    <div id="form-register" class="hidden">
+      <input type="text" id="reg-user" placeholder="Nom d'utilisateur">
+      <input type="password" id="reg-pass" placeholder="Mot de passe">
+      <button class="btn-primary" onclick="handleRegister()">Créer le compte</button>
+    </div>
+    <p id="auth-error" class="error-msg"></p>
+  </div>
+</div>
 
-  <!-- LOADING SCREEN -->
-  <div id="loading-screen">
-    <div class="loader-content">
-      <h1>🎰 ScratchKing</h1>
-      <div class="spinner"></div>
-      <p>Chargement...</p>
+<!-- GAME -->
+<div id="game-screen" class="hidden">
+  <header>
+    <div class="header-left"><h2>🎰 ScratchKing</h2></div>
+    <div class="header-center">
+      <span id="hud-credits">💰 500</span>
+      <span id="hud-xp">⭐ XP: 0</span>
+      <span id="hud-level">🏆 Niv. 1</span>
+      <span id="hud-debt" class="hidden">💳 Dette: 0</span>
+    </div>
+    <div class="header-right">
+      <button class="btn-shop" onclick="openShop()">&#128717;&#65039; Boutique</button>
+      <button class="btn-admin hidden" id="admin-btn" onclick="openAdmin()">&#128295; Admin</button>
+      <button class="btn-logout" onclick="logout()">Quitter</button>
+    </div>
+  </header>
+  <div id="tickets-section">
+    <h3>Choisissez votre ticket</h3>
+    <div id="tickets-grid"></div>
+  </div>
+</div>
+
+<!-- SCRATCH MODAL -->
+<div id="scratch-modal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <button class="btn-close" onclick="closeScratch()">&#10005;</button>
+    <h2 id="scratch-title"></h2>
+    <div class="scratch-wrap">
+      <canvas id="scratch-canvas" width="320" height="200"></canvas>
+    </div>
+    <div id="scratch-result" class="scratch-result hidden"></div>
+  </div>
+</div>
+
+<!-- SHOP MODAL -->
+<div id="shop-modal" class="modal-overlay hidden">
+  <div class="modal-box" style="max-width:520px;overflow-y:auto;max-height:90vh">
+    <button class="btn-close" onclick="closeShop()">&#10005;</button>
+    <h2>🛒 Boutique</h2>
+    <div class="shop-section">
+      <h4>🍡 Roulette Quotidienne</h4>
+      <div class="roulette-wrap">
+        <canvas id="roulette-canvas" width="260" height="260"></canvas>
+        <p id="roulette-timer"></p>
+        <button class="spin-btn" id="spin-btn" onclick="spinRoulette()">Tourner !</button>
+      </div>
+    </div>
+    <div class="shop-section">
+      <h4>🎨 Skins de thème</h4>
+      <div class="skins-grid" id="skins-list"></div>
     </div>
   </div>
+</div>
 
-  <!-- AUTH SCREEN -->
-  <div id="auth-screen" ">
-    <div class="auth-card">
-      <h1>🎰 ScratchKing</h1>
-      <div class="auth-tabs">
-        <button id="tab-login" class="tab active" onclick="showTab('login')">Connexion</button>
-        <button id="tab-register" class="tab" onclick="showTab('register')">Créer un compte</button>
+<!-- ADMIN MODAL -->
+<div id="admin-modal" class="modal-overlay hidden">
+  <div class="modal-box" style="max-width:700px;overflow-y:auto;max-height:90vh">
+    <button class="btn-close" onclick="closeAdmin()">&#10005;</button>
+    <h2>🔧 Panel Admin</h2>
+    <table id="admin-table">
+      <thead><tr><th>Pseudo</th><th>Crédits</th><th>XP</th><th>Niveau</th><th>Dette</th><th>Mot de passe</th></tr></thead>
+      <tbody id="admin-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- LOAN MODAL -->
+<div id="loan-modal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <h2>💳 Besoin de crédits ?</h2>
+    <div class="loan-box">
+      <p>Tu n'as pas assez pour ce ticket.<br>Emprunter <strong>100 crédits</strong> ?</p>
+      <p style="font-size:.8rem;color:var(--text-dim)">Remboursement auto dès que ton solde ≥ 2× ta dette totale.</p>
+      <div class="loan-actions">
+        <button class="btn-loan" onclick="acceptLoan()">Emprunter 100 💰</button>
+        <button class="btn-no" onclick="closeLoan()">Non merci</button>
       </div>
-      <div id="form-login">
-        <input type="text" id="login-user" placeholder="Nom d'utilisateur" />
-        <input type="password" id="login-pass" placeholder="Mot de passe" />
-        <button class="btn-primary" onclick="handleLogin()">Se connecter</button>
-      </div>
-      <div id="form-register" class="hidden">
-        <input type="text" id="reg-user" placeholder="Nom d'utilisateur" />
-        <input type="password" id="reg-pass" placeholder="Mot de passe" />
-        <button class="btn-primary" onclick="handleRegister()">Créer le compte</button>
-      </div>
-      <p id="auth-error" class="error-msg"></p>
     </div>
   </div>
+</div>
 
-  <!-- MAIN GAME -->
-  <div id="game-screen" class="hidden">
-    <header>
-      <div class="header-left"><h2>🎰 ScratchKing</h2></div>
-      <div class="header-center">
-        <span id="hud-credits">💰 500</span>
-        <span id="hud-xp">⭐ XP: 0</span>
-        <span id="hud-level">🏆 Niv. 1</span>
-        <span id="hud-debt" class="debt-badge hidden">💳 Dette: 0</span>
-      </div>
-      <div class="header-right">
-        <button class="btn-shop" onclick="openShop()">🛍️ Boutique</button>
-        <button class="btn-admin hidden" id="admin-btn" onclick="openAdmin()">🔧 Panel Admin</button>
-        <button class="btn-logout" onclick="logout()">Quitter</button>
-      </div>
-    </header>
+<div id="toast-container"></div>
 
-    <section id="tickets-section">
-      <h3>Choisissez votre ticket</h3>
-      <div class="tickets-grid" id="tickets-grid"></div>
-    </section>
-
-    <!-- SCRATCH MODAL -->
-    <div id="scratch-modal" class="modal hidden">
-      <div class="modal-content">
-        <h3 id="scratch-title"></h3>
-        <div class="canvas-wrap">
-          <canvas id="scratch-canvas" width="320" height="200"></canvas>
-        </div>
-        <div id="scratch-result" class="hidden"></div>
-        <button class="btn-secondary" onclick="closeScratch()">Fermer</button>
-      </div>
-    </div>
-
-    <!-- SHOP MODAL -->
-    <div id="shop-modal" class="modal hidden">
-      <div class="modal-content wide">
-        <h3>🛍️ Boutique</h3>
-        <div class="roulette-section">
-          <h4>🍡 Roulette Quotidienne</h4>
-          <div class="roulette-wrap">
-            <canvas id="roulette-canvas" width="300" height="300"></canvas>
-            <div class="roulette-pointer">▼</div>
-          </div>
-          <button class="btn-primary" id="spin-btn" onclick="spinRoulette()">Tourner !</button>
-          <p id="roulette-timer"></p>
-        </div>
-        <div class="skins-section">
-          <h4>🎨 Skins de thème</h4>
-          <div id="skins-list" class="skins-grid"></div>
-        </div>
-        <button class="btn-secondary" onclick="closeShop()">Fermer</button>
-      </div>
-    </div>
-
-    <!-- ADMIN PANEL -->
-    <div id="admin-modal" class="modal hidden">
-      <div class="modal-content wide">
-        <h3>🔧 Panel Admin</h3>
-        <div class="table-wrap">
-          <table id="admin-table">
-            <thead><tr><th>Pseudo</th><th>Crédits</th><th>XP</th><th>Niveau</th><th>Dette</th><th>Mot de passe</th></tr></thead>
-            <tbody id="admin-tbody"></tbody>
-          </table>
-        </div>
-        <button class="btn-secondary" onclick="closeAdmin()">Fermer</button>
-      </div>
-    </div>
-
-    <!-- LOAN POPUP -->
-    <div id="loan-popup" class="modal hidden">
-      <div class="modal-content small">
-        <div class="loan-icon">💳</div>
-        <h3>Besoin de crédits ?</h3>
-        <p>Tu n'as pas assez pour ce ticket.<br/>Emprunter <strong>100 crédits</strong> ?</p>
-        <p class="small-note">Remboursement auto dès que ton solde ≥ 2× ta dette totale.</p>
-        <button class="btn-primary" onclick="acceptLoan()">Emprunter 100 💰</button>
-        <button class="btn-secondary" onclick="closeLoan()">Non merci</button>
-      </div>
-    </div>
-
-    <!-- TOAST CONTAINER -->
-    <div id="toast-container"></div>
-  </div>
-
-  <script type="module" src="app.js"></script>
-</body>
-</html>
+<script>
+// DB localStorage
+const db={get u(){return JSON.parse(localStorage.getItem('sk_users')||'[]')},set u(v){localStorage.setItem('sk_users',JSON.stringify(v))},get s(){return localStorage.getItem('sk_session')},set s(v){localStorage.setItem('sk_session',v||'')}};
+let player=null,pendingTicketCost=0,pendingTicketId=null;
+// TICKETS - 10 nouveaux jeux
+const TICKETS=[
+  {id:"fortune",name:"Fortune Dorée",emoji:"🪙",price:30,xpWin:8,desc:"Aligne 3 symboles dorés pour gagner !"},
+  {id:"treasure",name:"Chemin du Trésor",emoji:"🗺️",price:50,xpWin:12,desc:"Connecte le chemin de la carte au trésor"},
+  {id:"animals",name:"Monde des Animaux",emoji:"🐾",price:40,xpWin:10,desc:"Trouve 2 animaux identiques parmi les cases"},
+  {id:"stars",name:"Mystère des Étoiles",emoji:"⭐",price:60,xpWin:15,desc:"Gratte 3 étoiles de même intensité"},
+  {id:"world",name:"Voyage autour du Monde",emoji:"✈️",price:80,xpWin:20,desc:"Réunis 3 destinations pour une escapade"},
+  {id:"hero",name:"Super-Héros",emoji:"🦸",price:100,xpWin:25,desc:"Associe les héros avec leurs pouvoirs"},
+  {id:"puzzle",name:"Puzzle Mystère",emoji:"🧩",price:75,xpWin:18,desc:"Complète le puzzle caché sous les cases"},
+  {id:"maze",name:"Défi du Labyrinthe",emoji:"🌀",price:90,xpWin:22,desc:"Trouve le chemin du début à la fin"},
+  {id:"carnival",name:"Fête Foraine",emoji:"🎡",price:55,xpWin:14,desc:"Accumule 3 jeux gagnants de la fête"},
+  {id:"cooking",name:"Cuisine Gourmande",emoji:"👨‍🍳",price:70,xpWin:17,desc:"Réunis les ingrédients pour une recette"}
+];
+const PRIZES={fortune:[0,0,0,40,60,80],treasure:[0,0,0,70,100,130],animals:[0,0,0,50,80,100],stars:[0,0,0,80,120,160],world:[0,0,0,110,160,200],hero:[0,0,0,140,200,250],puzzle:[0,0,0,100,150,180],maze:[0,0,0,120,180,220],carnival:[0,0,0,75,110,140],cooking:[0,0,0,95,140,170]};
+const SKINS=[{id:"default",name:"Défaut",price:0,emoji:"⚪"},{id:"neon",name:"Néon",price:500,emoji:"🟯"},{id:"gold",name:"Gold",price:1000,emoji:"🟡"},{id:"dark",name:"Dark",price:750,emoji:"⚫"},{id:"fire",name:"Fire",price:1500,emoji:"🔴"}];
+const SKIN_VARS={default:{accent:"#a259ff",bg:"#0d0d1a",bg2:"#1a0d2e"},neon:{accent:"#00ffcc",bg:"#0a0f1e",bg2:"#001a15"},gold:{accent:"#ffd700",bg:"#1a1400",bg2:"#2a2000"},dark:{accent:"#888",bg:"#050505",bg2:"#101010"},fire:{accent:"#ff6b00",bg:"#1a0a00",bg2:"#2a1000"}};
+const ROULETTE_PRIZES=[{label:"+50💰",credits:50,xp:0},{label:"+100💰",credits:100,xp:0},{label:"+XP 20",credits:0,xp:20},{label:"+200💰",credits:200,xp:0},{label:"Rien",credits:0,xp:0},{label:"+500💰",credits:500,xp:0},{label:"+XP 50",credits:0,xp:50},{label:"+150💰",credits:150,xp:0}];
+const ROULETTE_COLORS=["#a259ff","#7c3aed","#6d28d9","#5b21b6","#4c1d95","#3730a3","#312e81","#1e1b4b"];
+let rouletteSpinning=false;
+// INIT
+window.addEventListener('load',async()=>{const s=db.s;if(s){const users=db.u;const f=users.find(x=>x.username===s);if(f)startGame(f)}});
+// AUTH
+function showTab(t){document.getElementById('form-login').classList.toggle('hidden',t!=='login');document.getElementById('form-register').classList.toggle('hidden',t!=='register');document.getElementById('tab-login').classList.toggle('active',t==='login');document.getElementById('tab-register').classList.toggle('active',t==='register');document.getElementById('auth-error').textContent='';}
+function handleLogin(){const u=document.getElementById('login-user').value.trim();const p=document.getElementById('login-pass').value.trim();if(!u||!p)return setAuthError('Remplis tous les champs.');const users=db.u;const found=users.find(x=>x.username===u);if(!found)return setAuthError('Compte introuvable.');if(found.password!==p)return setAuthError('Mot de passe incorrect.');startGame(found);}
+function handleRegister(){const u=document.getElementById('reg-user').value.trim();const p=document.getElementById('reg-pass').value.trim();if(!u||!p)return setAuthError('Remplis tous les champs.');if(u.length<3)return setAuthError('Pseudo trop court (min 3).');const users=db.u;if(users.find(x=>x.username===u))return setAuthError('Ce pseudo existe déjà.');const newPlayer={username:u,password:p,credits:500,xp:0,level:1,debt:0,lastRoulette:0,skin:"default",ownedSkins:["default"]};users.push(newPlayer);db.u=users;startGame(newPlayer);}
+function setAuthError(m){document.getElementById('auth-error').textContent=m;}
+function logout(){if(player)savePlayer();player=null;db.s='';document.getElementById('game-screen').classList.add('hidden');document.getElementById('auth-screen').classList.remove('hidden');}
+// GAME
+function startGame(data){player=data;db.s=data.username;document.getElementById('auth-screen').classList.add('hidden');document.getElementById('game-screen').classList.remove('hidden');if(!player.ownedSkins)player.ownedSkins=["default"];applySkin(player.skin||"default",false);updateHUD();renderTickets();if(player.username.toLowerCase()==="admin")document.getElementById('admin-btn').classList.remove('hidden');checkLoanRepayment();}
+function updateHUD(){player.level=Math.floor(player.xp/100)+1;document.getElementById('hud-credits').textContent=`💰 ${player.credits}`;document.getElementById('hud-xp').textContent=`⭐ XP: ${player.xp}`;document.getElementById('hud-level').textContent=`🏆 Niv. ${player.level}`;const debtBadge=document.getElementById('hud-debt');if(player.debt>0){debtBadge.textContent=`💳 Dette: ${player.debt}`;debtBadge.classList.remove('hidden');}else{debtBadge.classList.add('hidden');}}
+function renderTickets(){const grid=document.getElementById('tickets-grid');grid.innerHTML='';TICKETS.forEach(t=>{const card=document.createElement('div');card.className='ticket-card';card.innerHTML=`<div class="t-emoji">${t.emoji}</div><h4>${t.name}</h4><p class="t-price">${t.price} 💰</p><p class="t-desc">${t.desc}</p>`;card.onclick=()=>buyTicket(t.id);grid.appendChild(card);});}
