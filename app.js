@@ -324,3 +324,60 @@ function showToast(m) {
   t.className = 'toast'; t.textContent = m; c.appendChild(t);
   setTimeout(() => t.remove(), 3000);
 }
+
+
+// ===== LEADERBOARD =====
+function openLeaderboard() {
+    document.getElementById('leaderboard-modal').classList.remove('hidden');
+    renderLeaderboard('credits');
+    
+    document.querySelectorAll('.leaderboard-tabs .tab').forEach(btn => {
+        btn.onclick = () => {
+            document.querySelectorAll('.leaderboard-tabs .tab').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderLeaderboard(btn.dataset.type);
+        };
+    });
+}
+
+function closeLeaderboard() {
+    document.getElementById('leaderboard-modal').classList.add('hidden');
+}
+
+function renderLeaderboard(type) {
+    const tbody = document.getElementById('leaderboard-tbody');
+    const header = document.getElementById('lb-val-header');
+    const users = db.users.slice();
+    
+    if (type === 'credits') {
+        header.textContent = 'Crédits';
+        users.sort((a, b) => b.credits - a.credits);
+    } else {
+        header.textContent = 'Niveau';
+        users.forEach(u => u.level = Math.floor(u.xp / 100) + 1);
+        users.sort((a, b) => b.xp - a.xp);
+    }
+    
+    tbody.innerHTML = '';
+    users.slice(0, 50).forEach((u, i) => {
+        const tr = document.createElement('tr');
+        const isSelf = u.username === player.username;
+        if (isSelf) tr.style.background = 'rgba(162,89,255,0.1)';
+        
+        let medal = '';
+        if (i === 0) medal = '🥇';
+        else if (i === 1) medal = '🥈';
+        else if (i === 2) medal = '🥉';
+        
+        tr.innerHTML = `
+            <td>${medal || (i + 1)}</td>
+            <td>${u.username}${isSelf ? ' (vous)' : ''}</td>
+            <td>${type === 'credits' ? u.credits + ' 💰' : 'Niv. ' + u.level + ' (🌟' + u.xp + ')'}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function closeShop() { document.getElementById('shop-modal').classList.add('hidden'); }
+    document.getElementById('leaderboard-btn').onclick = openLeaderboard;
+    document.getElementById('close-leaderboard').onclick = closeLeaderboard;
