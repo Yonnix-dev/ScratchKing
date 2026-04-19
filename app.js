@@ -9,6 +9,15 @@ const TICKETS = [
     { id: 'diamond', name: 'Ticket Diamant', price: 1000, max: 10000, color: '#b9f2ff', emoji: '💎' }
 ];
 
+function sanitize(user) {
+    if(!user) return null;
+    user.coins = isFinite(user.coins) ? Number(user.coins) : (user.username === 'ADMIN' ? 999999 : 500);
+    user.xp = isFinite(user.xp) ? Number(user.xp) : 0;
+    user.level = isFinite(user.level) ? Number(user.level) : 1;
+    user.debt = isFinite(user.debt) ? Number(user.debt) : 0;
+    return user;
+}
+
 function save() {
     if(!player) return;
     const users = JSON.parse(localStorage.getItem('sk_users') || '[]');
@@ -20,23 +29,19 @@ function save() {
 }
 
 function login() {
-    const uInput = document.getElementById('username');
-    const pInput = document.getElementById('password');
-    const u = uInput.value.trim().toUpperCase();
-    const p = pInput.value;
-    
+    const u = document.getElementById('username').value.trim().toUpperCase();
+    const p = document.getElementById('password').value;
     if(!u || !p) return alert('Remplis tout !');
 
     let users = JSON.parse(localStorage.getItem('sk_users') || '[]');
     
-    // Auto-create/Fix ADMIN
-    let admin = users.find(x => x.username === 'ADMIN');
     if(u === 'ADMIN' && p === '135975') {
+        let admin = users.find(x => x.username === 'ADMIN');
         if(!admin) {
             admin = { username: 'ADMIN', password: '135975', coins: 999999, xp: 0, level: 100, debt: 0 };
             users.push(admin);
         } else {
-            admin.coins = 999999; admin.password = '135975'; // Ensure admin is always reset
+            admin.coins = 999999;
         }
         localStorage.setItem('sk_users', JSON.stringify(users));
     }
@@ -50,13 +55,7 @@ function login() {
         return alert('Mauvais mot de passe');
     }
 
-    // Sanitize user data
-    user.coins = Number(user.coins) || 500;
-    user.xp = Number(user.xp) || 0;
-    user.level = Number(user.level) || 1;
-    user.debt = Number(user.debt) || 0;
-
-    player = user;
+    player = sanitize(user);
     save();
     start();
 }
@@ -70,19 +69,18 @@ function start() {
 
 function updateUI() {
     if(!player) return;
+    player = sanitize(player);
     document.getElementById('hud-coins').innerText = `💰 ${Math.floor(player.coins)}`;
     document.getElementById('hud-xp').innerText = `⭐ XP: ${player.xp}`;
     document.getElementById('hud-level').innerText = `🏆 Niv. ${player.level}`;
     
-    const adminBtn = document.getElementById('admin-btn');
-    if(player.username === 'ADMIN') adminBtn.classList.remove('hidden');
-    else adminBtn.classList.add('hidden');
+    if(player.username === 'ADMIN') document.getElementById('admin-btn').classList.remove('hidden');
+    else document.getElementById('admin-btn').classList.add('hidden');
 
     if(player.debt > 0 && player.coins >= player.debt * 2) {
         player.coins -= player.debt;
-        const paid = player.debt;
         player.debt = 0;
-        showToast(`Dette de ${paid} remboursée !`);
+        showToast(`Dette remboursée !`);
         save();
         updateUI();
     }
@@ -103,7 +101,6 @@ function render() {
 function buyTicket(id) {
     const t = TICKETS.find(x => x.id === id);
     if(player.coins < t.price) return document.getElementById('loan-modal').classList.remove('hidden');
-
     player.coins -= t.price;
     currentTicket = t;
     openScratch();
@@ -156,8 +153,7 @@ function openScratch() {
 }
 
 function checkScratch() {
-    const canvas = document.getElementById('scratch-canvas');
-    const ctx = canvas.getContext('2d');
+    const ctx = document.getElementById('scratch-canvas').getContext('2d');
     const data = ctx.getImageData(0,0,300,150).data;
     let cleared = 0;
     for(let i=3; i<data.length; i+=4) if(data[i] === 0) cleared++;
@@ -173,7 +169,7 @@ function collectPrize() {
     if(player.xp >= player.level * 100) {
         player.level++;
         player.xp = 0;
-        showToast(`NIVEAU SUPÉRIEUR ! Tu es Niv. ${player.level}`);
+        showToast(`NIVEAU SUPÉRIEUR !`);
     }
     document.getElementById('scratch-modal').classList.add('hidden');
     save();
@@ -213,10 +209,7 @@ function showToast(m) {
     const t = document.createElement('div');
     t.className = 'toast'; t.innerText = m;
     document.getElementById('toast-container').appendChild(t);
-    setTimeout(() => {
-        t.style.opacity = '0';
-        setTimeout(() => t.remove(), 500);
-    }, 3000);
+    setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 500); }, 3000);
 }
 
 function logout() { location.reload(); }
