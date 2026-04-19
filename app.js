@@ -11,7 +11,8 @@ let player = null;
 let pendingTicketCost = 0;
 let pendingTicketId = null;
 let scratchCount = 0;
-let isScratchFinished = false;
+let isScratchingActive = false;
+let scratchCanAward = false;
 
 // ===== DATA =====
 const TICKETS = [
@@ -72,8 +73,8 @@ let rouletteSpinning = false;
 
 // ===== INIT =====
 function initAdmin() {
-  if (!db.users.find(u => u.username === 'ADMIN')) {
-    const users = db.users;
+  const users = db.users;
+  if (!users.find(u => u.username === 'ADMIN')) {
     users.push({username:'ADMIN',password:'135975',credits:9999,xp:0,level:1,debt:0,lastRoulette:0,skin:'default',ownedSkins:['default']});
     db.users = users;
   }
@@ -227,7 +228,7 @@ function buyTicket(id) {
 function openScratch(t) {
   pendingTicketId = t.id;
   scratchCount = 0;
-  isScratchFinished = false;
+  scratchCanAward = true;
   document.getElementById('scratch-title').textContent = t.emoji + ' ' + t.name;
   document.getElementById('scratch-result').classList.add('hidden');
   document.getElementById('scratch-modal').classList.remove('hidden');
@@ -283,40 +284,31 @@ function setupScratchCanvas(t) {
     ctx.fillText('Mieux la prochaine fois !', W/2, H/2 + 30);
   }
 
-  // Draw scratch layer (grey cover)
-  const tempCanvas = document.createElement('canvas');
-  tempCanvas.width = W;
-  tempCanvas.height = H;
-  const tctx = tempCanvas.getContext('2d');
-  
-  const scratchGrad = tctx.createLinearGradient(0, 0, W, H);
-  scratchGrad.addColorStop(0, '#888');
-  scratchGrad.addColorStop(1, '#666');
-  tctx.fillStyle = scratchGrad;
-  tctx.fillRect(0, 0, W, H);
-  
-  tctx.font = '24px serif';
-  tctx.fillStyle = 'rgba(255,255,255,0.1)';
-  for(let i=0; i<5; i++) tctx.fillText('SCRATCH KING', 40 + i*20, 60 + i*40);
-  
-  tctx.font = 'bold 22px Segoe UI';
-  tctx.fillStyle = '#fff';
-  tctx.textAlign = 'center';
-  tctx.fillText('Grattez ici !', W/2, H/2);
+  // Cover with grey layer
+  const cover = document.createElement('canvas');
+  cover.width = W; cover.height = H;
+  const cctx = cover.getContext('2d');
+  const sGrad = cctx.createLinearGradient(0,0,W,H);
+  sGrad.addColorStop(0, '#888'); sGrad.addColorStop(1, '#666');
+  cctx.fillStyle = sGrad;
+  cctx.fillRect(0,0,W,H);
+  cctx.fillStyle = 'rgba(255,255,255,0.1)';
+  cctx.font = 'bold 20px Segoe UI';
+  cctx.textAlign = 'center';
+  cctx.fillText('GRATTEZ ICI', W/2, H/2);
 
-  const scratchImg = new Image();
-  scratchImg.src = tempCanvas.toDataURL();
-  scratchImg.onload = () => {
+  const coverImg = new Image();
+  coverImg.src = cover.toDataURL();
+  coverImg.onload = () => {
     ctx.globalCompositeOperation = 'source-over';
-    ctx.drawImage(scratchImg, 0, 0);
+    ctx.drawImage(coverImg, 0, 0);
   };
 
-  // Scratch interaction
   let isDragging = false;
   const totalPixels = W * H;
 
   function scratch(x, y) {
-    if (isScratchFinished) return;
+    if (!scratchCanAward) return;
     ctx.globalCompositeOperation = 'destination-out';
     ctx.beginPath();
     ctx.arc(x, y, 25, 0, Math.PI * 2);
@@ -324,14 +316,12 @@ function setupScratchCanvas(t) {
     ctx.globalCompositeOperation = 'source-over';
     
     scratchCount++;
-    if (scratchCount % 15 === 0) {
-      const imgData = ctx.getImageData(0, 0, W, H);
-      let transparent = 0;
-      for (let i = 3; i < imgData.data.length; i += 4) {
-        if (imgData.data[i] < 10) transparent++;
-      }
-      if (transparent / totalPixels > 0.5) {
-        isScratchFinished = true;
+    if (scratchCount % 20 === 0) {
+      const data = ctx.getImageData(0,0,W,H).data;
+      let trans = 0;
+      for (let i = 3; i < data.length; i += 4) { if (data[i] < 50) trans++; }
+      if (trans / totalPixels > 0.45) {
+        scratchCanAward = false;
         revealResult(prize, isWin, t);
       }
     }
@@ -341,18 +331,17 @@ function setupScratchCanvas(t) {
   canvas.onmouseup = () => isDragging = false;
   canvas.onmousemove = (e) => {
     if (!isDragging) return;
-    const rect = canvas.getBoundingClientRect();
-    scratch(e.clientX - rect.left, e.clientY - rect.top);
+    const r = canvas.getBoundingClientRect();
+    scratch(e.clientX - r.left, e.clientY - r.top);
   };
-  
   canvas.ontouchstart = (e) => { isDragging = true; e.preventDefault(); };
   canvas.ontouchend = () => isDragging = false;
   canvas.ontouchmove = (e) => {
     if (!isDragging) return;
     e.preventDefault();
-    const touch = e.touches[0];
-    const rect = canvas.getBoundingClientRect();
-    scratch(touch.clientX - rect.left, touch.clientY - rect.top);
+    const t = e.touches[0];
+    const r = canvas.getBoundingClientRect();
+    scratch(t.clientX - r.left, t.clientY - r.top);
   };
 }
 
@@ -395,15 +384,16 @@ function checkLoanRepayment() {
 }
 
 // ===== SHOP =====
-function openShop() { document.getElementById('shop-modal').classList.remove('hidden'); renderSkins(); updateRouletteTimer(); }
+function openShop() { document.getElementById('shop-modal').classList.remove('hidden'); renderSkins(); updateRouletteTimer(); drawRoulette(); }
 function closeShop() { document.getElementById('shop-modal').classList.add('hidden'); }
 function renderSkins() {
   const list = document.getElementById('skins-list');
   list.innerHTML = '';
   SKINS.forEach(s => {
     const div = document.createElement('div');
-    div.className = 'skin-item' + (player.skin === s.id ? ' active-skin' : '');
-    div.innerHTML = `<span>${s.emoji}</span> <b>${s.name}</b> <br> ${s.price === 0 ? 'Gratuit' : s.price + ' 💰'}`;
+    div.style = 'background:var(--glass); border:1px solid var(--glass-border); border-radius:12px; padding:1rem; text-align:center; cursor:pointer;';
+    if (player.skin === s.id) div.style.borderColor = 'var(--accent)';
+    div.innerHTML = `<span>${s.emoji}</span><br><b>${s.name}</b><br>${s.price === 0 ? 'Gratuit' : s.price + ' 💰'}`;
     div.onclick = () => {
       if (player.ownedSkins.includes(s.id)) { applySkin(s.id, true); renderSkins(); }
       else if (player.credits >= s.price) {
@@ -430,8 +420,9 @@ function drawRoulette(rot = 0) {
   for(let i=0; i<n; i++) {
     ctx.beginPath(); ctx.moveTo(W/2,H/2); ctx.arc(W/2,H/2, r, rot+i*slice, rot+(i+1)*slice);
     ctx.fillStyle = ROULETTE_COLORS[i%ROULETTE_COLORS.length]; ctx.fill();
-    ctx.save(); ctx.translate(W/2,H/2); ctx.rotate(rot+i*slice+slice/2); ctx.textAlign='right'; ctx.fillStyle='#fff'; ctx.font='10px Arial'; ctx.fillText(ROULETTE_PRIZES[i].label, r-5, 5); ctx.restore();
+    ctx.save(); ctx.translate(W/2,H/2); ctx.rotate(rot+i*slice+slice/2); ctx.textAlign='right'; ctx.fillStyle='#fff'; ctx.font='bold 12px Arial'; ctx.fillText(ROULETTE_PRIZES[i].label, r-10, 5); ctx.restore();
   }
+  document.getElementById('spin-btn').onclick = spinRoulette;
 }
 function updateRouletteTimer() {
   const diff = 24*3600*1000 - (Date.now() - (player.lastRoulette||0));
@@ -480,6 +471,9 @@ function renderAdminTable() {
 // ===== TOAST =====
 function showToast(m) {
   const c = document.getElementById('toast-container');
-  const t = document.createElement('div'); t.className = 'toast'; t.textContent = m;
-  c.appendChild(t); setTimeout(() => t.remove(), 3000);
+  const t = document.createElement('div');
+  t.style = 'background:rgba(0,0,0,0.8); color:#fff; padding:0.8rem 1.5rem; border-radius:10px; margin-top:0.5rem; backdrop-filter:blur(5px); border:1px solid var(--glass-border); animation:slideIn 0.3s forwards;';
+  t.textContent = m;
+  c.appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 500); }, 3000);
 }
