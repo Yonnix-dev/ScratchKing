@@ -11,6 +11,7 @@ let player = null;
 let pendingTicketCost = 0;
 let pendingTicketId = null;
 let scratchCount = 0;
+let isScratchFinished = false;
 
 // ===== DATA =====
 const TICKETS = [
@@ -27,9 +28,15 @@ const TICKETS = [
 ];
 
 const PRIZES = {
-  fortune:[0,0,0,40,60,80], treasure:[0,0,0,70,100,130], animals:[0,0,0,50,80,100],
-  stars:[0,0,0,80,120,160], world:[0,0,0,110,160,200], hero:[0,0,0,140,200,250],
-  puzzle:[0,0,0,100,150,180], maze:[0,0,0,120,180,220], carnival:[0,0,0,75,110,140],
+  fortune:[0,0,0,40,60,80],
+  treasure:[0,0,0,70,100,130],
+  animals:[0,0,0,50,80,100],
+  stars:[0,0,0,80,120,160],
+  world:[0,0,0,110,160,200],
+  hero:[0,0,0,140,200,250],
+  puzzle:[0,0,0,100,150,180],
+  maze:[0,0,0,120,180,220],
+  carnival:[0,0,0,75,110,140],
   cooking:[0,0,0,95,140,170]
 };
 
@@ -42,18 +49,22 @@ const SKINS = [
 ];
 
 const SKIN_VARS = {
-  default: {accent:'#a259ff', bg:'#0d0d1a', bg2:'#1a0d2e'},
-  neon:    {accent:'#00ffcc', bg:'#0a0f1e', bg2:'#001a15'},
-  gold:    {accent:'#ffd700', bg:'#1a1400', bg2:'#2a2000'},
-  dark:    {accent:'#888888', bg:'#050505', bg2:'#101010'},
-  fire:    {accent:'#ff6b00', bg:'#1a0a00', bg2:'#2a1000'}
+  default: {accent:'#a259ff', bg:'#0d0d1a', bg2:'#1a1d2e'},
+  neon: {accent:'#00ffcc', bg:'#0a0f1e', bg2:'#001a15'},
+  gold: {accent:'#ffd700', bg:'#1a1400', bg2:'#2a2000'},
+  dark: {accent:'#888888', bg:'#050505', bg2:'#101010'},
+  fire: {accent:'#ff6b00', bg:'#1a0a00', bg2:'#2a1000'}
 };
 
 const ROULETTE_PRIZES = [
-  {label:'+50💰', credits:50, xp:0}, {label:'+100💰', credits:100, xp:0},
-  {label:'+XP 20', credits:0, xp:20}, {label:'+200💰', credits:200, xp:0},
-  {label:'Rien', credits:0, xp:0},   {label:'+500💰', credits:500, xp:0},
-  {label:'+XP 50', credits:0, xp:50},{label:'+150💰', credits:150, xp:0}
+  {label:'+50💰', credits:50, xp:0},
+  {label:'+100💰', credits:100, xp:0},
+  {label:'+XP 20', credits:0, xp:20},
+  {label:'+200💰', credits:200, xp:0},
+  {label:'Rien', credits:0, xp:0},
+  {label:'+500💰', credits:500, xp:0},
+  {label:'+XP 50', credits:0, xp:50},
+  {label:'+150💰', credits:150, xp:0}
 ];
 
 const ROULETTE_COLORS = ['#a259ff','#7c3aed','#6d28d9','#5b21b6','#4c1d95','#3730a3','#312e81','#1e1b4b'];
@@ -161,7 +172,10 @@ function savePlayer() {
   if (!player) return;
   const users = db.users;
   const idx = users.findIndex(u => u.username === player.username);
-  if (idx !== -1) { users[idx] = player; db.users = users; }
+  if (idx !== -1) {
+    users[idx] = player;
+    db.users = users;
+  }
 }
 
 function updateHUD() {
@@ -187,8 +201,8 @@ function renderTickets() {
     card.innerHTML = `
       <div class="t-emoji">${t.emoji}</div>
       <h4>${t.name}</h4>
-      <p class="t-price">${t.price} 💰</p>
-      <p class="t-desc">${t.desc}</p>
+      <p class="ticket-price">${t.price} 💰</p>
+      <p class="ticket-desc">${t.desc}</p>
     `;
     card.onclick = () => buyTicket(t.id);
     grid.appendChild(card);
@@ -213,6 +227,7 @@ function buyTicket(id) {
 function openScratch(t) {
   pendingTicketId = t.id;
   scratchCount = 0;
+  isScratchFinished = false;
   document.getElementById('scratch-title').textContent = t.emoji + ' ' + t.name;
   document.getElementById('scratch-result').classList.add('hidden');
   document.getElementById('scratch-modal').classList.remove('hidden');
@@ -226,17 +241,17 @@ function closeScratch() {
 function setupScratchCanvas(t) {
   const canvas = document.getElementById('scratch-canvas');
   const ctx = canvas.getContext('2d');
-  const W = canvas.width, H = canvas.height;
-
+  const W = canvas.width = 400;
+  const H = canvas.height = 250;
+  
   // Determine result
   const prizeList = PRIZES[t.id];
   const roll = Math.random();
   let prize = 0;
-  if (roll < 0.4) prize = prizeList[5];
-  else if (roll < 0.6) prize = prizeList[4];
-  else if (roll < 0.75) prize = prizeList[3];
+  if (roll < 0.2) prize = prizeList[5];
+  else if (roll < 0.4) prize = prizeList[4];
+  else if (roll < 0.6) prize = prizeList[3];
   else prize = 0;
-
   const isWin = prize > 0;
 
   // Draw reward layer (underneath)
@@ -251,7 +266,6 @@ function setupScratchCanvas(t) {
   }
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, W, H);
-
   ctx.textAlign = 'center';
   if (isWin) {
     ctx.font = 'bold 36px Segoe UI';
@@ -266,112 +280,94 @@ function setupScratchCanvas(t) {
     ctx.fillText('💀 Perdu...', W/2, H/2 - 10);
     ctx.font = '18px Segoe UI';
     ctx.fillStyle = '#aaa';
-    ctx.fillText('Meilleure chance la prochaine fois !', W/2, H/2 + 30);
+    ctx.fillText('Mieux la prochaine fois !', W/2, H/2 + 30);
   }
 
   // Draw scratch layer (grey cover)
-  ctx.globalCompositeOperation = 'source-over';
-  const scratchGrad = ctx.createLinearGradient(0, 0, W, H);
+  const tempCanvas = document.createElement('canvas');
+  tempCanvas.width = W;
+  tempCanvas.height = H;
+  const tctx = tempCanvas.getContext('2d');
+  
+  const scratchGrad = tctx.createLinearGradient(0, 0, W, H);
   scratchGrad.addColorStop(0, '#888');
   scratchGrad.addColorStop(1, '#666');
-  ctx.fillStyle = scratchGrad;
-  ctx.fillRect(0, 0, W, H);
+  tctx.fillStyle = scratchGrad;
+  tctx.fillRect(0, 0, W, H);
+  
+  tctx.font = '24px serif';
+  tctx.fillStyle = 'rgba(255,255,255,0.1)';
+  for(let i=0; i<5; i++) tctx.fillText('SCRATCH KING', 40 + i*20, 60 + i*40);
+  
+  tctx.font = 'bold 22px Segoe UI';
+  tctx.fillStyle = '#fff';
+  tctx.textAlign = 'center';
+  tctx.fillText('Grattez ici !', W/2, H/2);
 
-  // Scratch pattern
-  ctx.fillStyle = 'rgba(255,255,255,0.05)';
-  for (let i = 0; i < 20; i++) {
-    ctx.fillRect(Math.random()*W, Math.random()*H, Math.random()*60+20, 2);
-  }
-
-  // Stars decoration on cover
-  ctx.font = '20px serif';
-  for (let i = 0; i < 8; i++) {
-    ctx.fillText('⭐', 30 + i*37, 30 + (i%2)*20);
-  }
-
-  ctx.font = 'bold 22px Segoe UI';
-  ctx.fillStyle = '#fff';
-  ctx.fillText('Grattez pour révéler !', W/2, H/2);
-
-  ctx.globalCompositeOperation = 'source-over';
+  const scratchImg = new Image();
+  scratchImg.src = tempCanvas.toDataURL();
+  scratchImg.onload = () => {
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.drawImage(scratchImg, 0, 0);
+  };
 
   // Scratch interaction
-  let isScratching = false;
-  let revealed = 0;
+  let isDragging = false;
   const totalPixels = W * H;
 
-  function scratch(e) {
-    if (!isScratching) return;
-    const rect = canvas.getBoundingClientRect();
-    const scaleX = W / rect.width;
-    const scaleY = H / rect.height;
-    const x = (e.clientX - rect.left) * scaleX;
-    const y = (e.clientY - rect.top) * scaleY;
+  function scratch(x, y) {
+    if (isScratchFinished) return;
     ctx.globalCompositeOperation = 'destination-out';
     ctx.beginPath();
-    ctx.arc(x, y, 28, 0, Math.PI * 2);
+    ctx.arc(x, y, 25, 0, Math.PI * 2);
     ctx.fill();
     ctx.globalCompositeOperation = 'source-over';
-
-    // Check reveal %
+    
     scratchCount++;
-    if (scratchCount % 20 === 0) {
+    if (scratchCount % 15 === 0) {
       const imgData = ctx.getImageData(0, 0, W, H);
       let transparent = 0;
       for (let i = 3; i < imgData.data.length; i += 4) {
-        if (imgData.data[i] < 128) transparent++;
+        if (imgData.data[i] < 10) transparent++;
       }
-      if (transparent / totalPixels > 0.45) {
+      if (transparent / totalPixels > 0.5) {
+        isScratchFinished = true;
         revealResult(prize, isWin, t);
       }
     }
   }
 
-  function touchScratch(e) {
+  canvas.onmousedown = () => isDragging = true;
+  canvas.onmouseup = () => isDragging = false;
+  canvas.onmousemove = (e) => {
+    if (!isDragging) return;
+    const rect = canvas.getBoundingClientRect();
+    scratch(e.clientX - rect.left, e.clientY - rect.top);
+  };
+  
+  canvas.ontouchstart = (e) => { isDragging = true; e.preventDefault(); };
+  canvas.ontouchend = () => isDragging = false;
+  canvas.ontouchmove = (e) => {
+    if (!isDragging) return;
     e.preventDefault();
     const touch = e.touches[0];
     const rect = canvas.getBoundingClientRect();
-    const scaleX = W / rect.width;
-    const scaleY = H / rect.height;
-    const x = (touch.clientX - rect.left) * scaleX;
-    const y = (touch.clientY - rect.top) * scaleY;
-    ctx.globalCompositeOperation = 'destination-out';
-    ctx.beginPath();
-    ctx.arc(x, y, 28, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.globalCompositeOperation = 'source-over';
-    scratchCount++;
-    if (scratchCount % 20 === 0) {
-      const imgData = ctx.getImageData(0, 0, W, H);
-      let transparent = 0;
-      for (let i = 3; i < imgData.data.length; i += 4) {
-        if (imgData.data[i] < 128) transparent++;
-      }
-      if (transparent / totalPixels > 0.45) revealResult(prize, isWin, t);
-    }
-  }
-
-  canvas.onmousedown = () => isScratching = true;
-  canvas.onmouseup = () => isScratching = false;
-  canvas.onmouseleave = () => isScratching = false;
-  canvas.onmousemove = scratch;
-  canvas.ontouchstart = (e) => { isScratching = true; touchScratch(e); };
-  canvas.ontouchend = () => isScratching = false;
-  canvas.ontouchmove = touchScratch;
+    scratch(touch.clientX - rect.left, touch.clientY - rect.top);
+  };
 }
 
 function revealResult(prize, isWin, t) {
   const resultDiv = document.getElementById('scratch-result');
-  resultDiv.classList.remove('hidden', 'win', 'lose');
+  resultDiv.classList.remove('hidden');
   if (isWin) {
     player.credits += prize;
     player.xp += t.xpWin;
-    resultDiv.className = 'scratch-result win';
-    resultDiv.textContent = '🎉 Tu gagnes +' + prize + ' crédits !';
-    showToast('🎉 +' + prize + ' crédits gagnants !');
+    resultDiv.textContent = '🎉 Gagné: ' + prize + ' 💰';
+    resultDiv.style.color = '#ffd700';
+    showToast('🎉 +' + prize + ' 💰 !');
   } else {
-    resultDiv.className = 'scratch-result lose';
-    resultDiv.textContent = '💀 Pas de chance cette fois...';
+    resultDiv.textContent = '💀 Perdu...';
+    resultDiv.style.color = '#ff6b6b';
     showToast('💀 Perdu !');
   }
   savePlayer();
@@ -387,16 +383,11 @@ function acceptLoan() {
   document.getElementById('loan-modal').classList.add('hidden');
   if (pendingTicketId) buyTicket(pendingTicketId);
 }
-
-function closeLoan() {
-  document.getElementById('loan-modal').classList.add('hidden');
-  pendingTicketId = null;
-}
-
+function closeLoan() { document.getElementById('loan-modal').classList.add('hidden'); pendingTicketId = null; }
 function checkLoanRepayment() {
   if (player.debt > 0 && player.credits >= player.debt * 2) {
     player.credits -= player.debt;
-    showToast('💳 Dette de ' + player.debt + ' crédits remboursée !');
+    showToast('💳 Dette remboursée !');
     player.debt = 0;
     savePlayer();
     updateHUD();
@@ -404,192 +395,91 @@ function checkLoanRepayment() {
 }
 
 // ===== SHOP =====
-function openShop() {
-  document.getElementById('shop-modal').classList.remove('hidden');
-  renderSkins();
-  setupRoulette();
-  drawRoulette();
-  updateRouletteTimer();
-  document.getElementById('spin-btn').onclick = spinRoulette;
-}
-
-function closeShop() {
-  document.getElementById('shop-modal').classList.add('hidden');
-}
-
+function openShop() { document.getElementById('shop-modal').classList.remove('hidden'); renderSkins(); updateRouletteTimer(); }
+function closeShop() { document.getElementById('shop-modal').classList.add('hidden'); }
 function renderSkins() {
   const list = document.getElementById('skins-list');
   list.innerHTML = '';
   SKINS.forEach(s => {
     const div = document.createElement('div');
-    div.className = 'skin-item' + (player.skin === s.id ? ' owned active-skin' : player.ownedSkins.includes(s.id) ? ' owned' : '');
-    div.innerHTML = `<div class="s-emoji">${s.emoji}</div><div>${s.name}</div><div style="font-size:.75rem;color:var(--text-dim)">${s.price === 0 ? 'Gratuit' : s.price + ' 💰'}</div>`;
+    div.className = 'skin-item' + (player.skin === s.id ? ' active-skin' : '');
+    div.innerHTML = `<span>${s.emoji}</span> <b>${s.name}</b> <br> ${s.price === 0 ? 'Gratuit' : s.price + ' 💰'}`;
     div.onclick = () => {
-      if (player.ownedSkins.includes(s.id)) {
-        applySkin(s.id, true);
-        renderSkins();
-      } else if (player.credits >= s.price) {
-        player.credits -= s.price;
-        player.ownedSkins.push(s.id);
-        applySkin(s.id, true);
-        renderSkins();
-        updateHUD();
-        showToast('🎨 Skin ' + s.name + ' acheté !');
-      } else {
-        showToast('❌ Pas assez de crédits !');
-      }
+      if (player.ownedSkins.includes(s.id)) { applySkin(s.id, true); renderSkins(); }
+      else if (player.credits >= s.price) {
+        player.credits -= s.price; player.ownedSkins.push(s.id); applySkin(s.id, true); renderSkins(); updateHUD(); showToast('🎨 Skin débloqué !');
+      } else showToast('❌ Pas assez de crédits !');
     };
     list.appendChild(div);
   });
 }
-
 function applySkin(id, save) {
   const vars = SKIN_VARS[id] || SKIN_VARS.default;
   document.documentElement.style.setProperty('--accent', vars.accent);
   document.documentElement.style.setProperty('--bg', vars.bg);
   document.documentElement.style.setProperty('--bg2', vars.bg2);
-  document.body.style.background = `linear-gradient(135deg, ${vars.bg}, ${vars.bg2})`;
   if (save) { player.skin = id; savePlayer(); }
 }
 
 // ===== ROULETTE =====
-function setupRoulette() {
+function drawRoulette(rot = 0) {
   const canvas = document.getElementById('roulette-canvas');
-  if (!canvas._setup) { canvas._setup = true; }
-}
-
-function drawRoulette(rotation) {
-  const canvas = document.getElementById('roulette-canvas');
-  const ctx = canvas.getContext('2d');
-  const W = canvas.width, H = canvas.height;
-  const cx = W/2, cy = H/2, r = cx - 5;
-  const n = ROULETTE_PRIZES.length;
-  const angle = (Math.PI * 2) / n;
-  const rot = rotation || 0;
-
-  ctx.clearRect(0, 0, W, H);
-  for (let i = 0; i < n; i++) {
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.arc(cx, cy, r, rot + i * angle, rot + (i+1) * angle);
-    ctx.fillStyle = ROULETTE_COLORS[i % ROULETTE_COLORS.length];
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-    ctx.lineWidth = 1;
-    ctx.stroke();
-
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.rotate(rot + i * angle + angle / 2);
-    ctx.textAlign = 'right';
-    ctx.fillStyle = '#fff';
-    ctx.font = 'bold 11px Segoe UI';
-    ctx.fillText(ROULETTE_PRIZES[i].label, r - 8, 4);
-    ctx.restore();
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d'), W = canvas.width, H = canvas.height, r = W/2 - 5, n = ROULETTE_PRIZES.length, slice = (Math.PI*2)/n;
+  ctx.clearRect(0,0,W,H);
+  for(let i=0; i<n; i++) {
+    ctx.beginPath(); ctx.moveTo(W/2,H/2); ctx.arc(W/2,H/2, r, rot+i*slice, rot+(i+1)*slice);
+    ctx.fillStyle = ROULETTE_COLORS[i%ROULETTE_COLORS.length]; ctx.fill();
+    ctx.save(); ctx.translate(W/2,H/2); ctx.rotate(rot+i*slice+slice/2); ctx.textAlign='right'; ctx.fillStyle='#fff'; ctx.font='10px Arial'; ctx.fillText(ROULETTE_PRIZES[i].label, r-5, 5); ctx.restore();
   }
-
-  // Center circle
-  ctx.beginPath();
-  ctx.arc(cx, cy, 14, 0, Math.PI*2);
-  ctx.fillStyle = '#0d0d1a';
-  ctx.fill();
-
-  // Arrow pointer
-  ctx.beginPath();
-  ctx.moveTo(cx + r + 5, cy);
-  ctx.lineTo(cx + r - 12, cy - 8);
-  ctx.lineTo(cx + r - 12, cy + 8);
-  ctx.fillStyle = '#ffd700';
-  ctx.fill();
 }
-
 function updateRouletteTimer() {
-  const now = Date.now();
-  const last = player.lastRoulette || 0;
-  const diff = 24 * 3600 * 1000 - (now - last);
-  const timerEl = document.getElementById('roulette-timer');
-  const spinBtn = document.getElementById('spin-btn');
-  if (diff <= 0) {
-    timerEl.textContent = 'Disponible maintenant !';
-    spinBtn.disabled = false;
-  } else {
-    const h = Math.floor(diff / 3600000);
-    const m = Math.floor((diff % 3600000) / 60000);
-    const s = Math.floor((diff % 60000) / 1000);
-    timerEl.textContent = `Prochaine dans ${h}h ${m}m ${s}s`;
-    spinBtn.disabled = true;
+  const diff = 24*3600*1000 - (Date.now() - (player.lastRoulette||0));
+  const btn = document.getElementById('spin-btn');
+  if(diff <= 0) { btn.disabled = false; document.getElementById('roulette-timer').textContent = 'Prêt !'; }
+  else {
+    btn.disabled = true;
+    const h = Math.floor(diff/3600000), m = Math.floor((diff%3600000)/60000), s = Math.floor((diff%60000)/1000);
+    document.getElementById('roulette-timer').textContent = `${h}h ${m}m ${s}s`;
     setTimeout(updateRouletteTimer, 1000);
   }
 }
-
 function spinRoulette() {
-  if (rouletteSpinning) return;
-  const now = Date.now();
-  if (now - (player.lastRoulette||0) < 24*3600*1000) {
-    showToast('⏰ Roulette déjà utilisée aujourd’hui !');
-    return;
-  }
+  if(rouletteSpinning) return;
   rouletteSpinning = true;
-  document.getElementById('spin-btn').disabled = true;
-  const prizeIdx = Math.floor(Math.random() * ROULETTE_PRIZES.length);
-  const n = ROULETTE_PRIZES.length;
-  const anglePerSlice = (Math.PI * 2) / n;
-  const targetAngle = (Math.PI * 2) * 6 + (Math.PI * 2 - prizeIdx * anglePerSlice - anglePerSlice / 2);
+  const target = Math.floor(Math.random()*ROULETTE_PRIZES.length);
+  const totalRot = (Math.PI*2)*5 + (Math.PI*2 - target*((Math.PI*2)/ROULETTE_PRIZES.length) - ((Math.PI*2)/ROULETTE_PRIZES.length)/2);
   let start = null;
-  const duration = 4000;
-  let currentRot = 0;
-
-  function animate(ts) {
-    if (!start) start = ts;
-    const elapsed = ts - start;
-    const progress = Math.min(elapsed / duration, 1);
-    const ease = 1 - Math.pow(1 - progress, 3);
-    currentRot = targetAngle * ease;
-    drawRoulette(currentRot);
-    if (progress < 1) {
-      requestAnimationFrame(animate);
-    } else {
-      rouletteSpinning = false;
-      const prize = ROULETTE_PRIZES[prizeIdx];
-      player.credits += prize.credits;
-      player.xp += prize.xp;
-      player.lastRoulette = now;
-      savePlayer();
-      updateHUD();
-      showToast('🎡 ' + prize.label + ' !');
-      updateRouletteTimer();
+  function anim(t) {
+    if(!start) start = t;
+    const p = Math.min((t-start)/3000, 1), ease = 1-Math.pow(1-p,3);
+    drawRoulette(totalRot*ease);
+    if(p<1) requestAnimationFrame(anim);
+    else {
+      rouletteSpinning = false; const prize = ROULETTE_PRIZES[target];
+      player.credits += prize.credits; player.xp += prize.xp; player.lastRoulette = Date.now();
+      savePlayer(); updateHUD(); showToast('🎡 ' + prize.label); updateRouletteTimer();
     }
   }
-  requestAnimationFrame(animate);
+  requestAnimationFrame(anim);
 }
 
 // ===== ADMIN =====
-function openAdmin() {
-  document.getElementById('admin-modal').classList.remove('hidden');
-  renderAdminTable();
-}
-
-function closeAdmin() {
-  document.getElementById('admin-modal').classList.add('hidden');
-}
-
+function openAdmin() { document.getElementById('admin-modal').classList.remove('hidden'); renderAdminTable(); }
+function closeAdmin() { document.getElementById('admin-modal').classList.add('hidden'); }
 function renderAdminTable() {
   const tbody = document.getElementById('admin-tbody');
   tbody.innerHTML = '';
   db.users.forEach(u => {
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${u.username}</td><td>${u.credits} 💰</td><td>${u.xp}</td><td>${u.level || 1}</td><td>${u.debt || 0}</td><td>${u.password}</td>`;
+    tr.innerHTML = `<td>${u.username}</td><td>${u.credits}</td><td>${u.xp}</td><td>${u.level}</td><td>${u.debt}</td><td>${u.password}</td>`;
     tbody.appendChild(tr);
   });
 }
 
 // ===== TOAST =====
-function showToast(msg) {
-  const container = document.getElementById('toast-container');
-  const toast = document.createElement('div');
-  toast.className = 'toast';
-  toast.textContent = msg;
-  container.appendChild(toast);
-  setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateX(100%)'; }, 2500);
-  setTimeout(() => toast.remove(), 3000);
+function showToast(m) {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div'); t.className = 'toast'; t.textContent = m;
+  c.appendChild(t); setTimeout(() => t.remove(), 3000);
 }
