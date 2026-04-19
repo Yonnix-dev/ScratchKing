@@ -19,13 +19,13 @@ function save() {
 }
 
 function login() {
-    const u = document.getElementById('username').value;
+    const u = document.getElementById('username').value.trim().toUpperCase();
     const p = document.getElementById('password').value;
     if(!u || !p) return alert('Remplis tout !');
 
-    const users = JSON.parse(localStorage.getItem('sk_users') || '[]');
+    let users = JSON.parse(localStorage.getItem('sk_users') || '[]');
     
-    // Add default ADMIN if not exists
+    // Auto-create ADMIN if not exists
     if(u === 'ADMIN' && p === '135975' && !users.find(x => x.username === 'ADMIN')) {
         users.push({ username: 'ADMIN', password: '135975', coins: 999999, xp: 0, level: 100, debt: 0 });
         localStorage.setItem('sk_users', JSON.stringify(users));
@@ -33,6 +33,7 @@ function login() {
 
     let user = users.find(x => x.username === u);
     if(!user) {
+        // Register
         user = { username: u, password: p, coins: 500, xp: 0, level: 1, debt: 0 };
         users.push(user);
         localStorage.setItem('sk_users', JSON.stringify(users));
@@ -40,7 +41,14 @@ function login() {
         return alert('Mauvais mot de passe');
     }
 
+    // Fix NaN or missing properties for existing accounts
+    if (isNaN(user.coins)) user.coins = 500;
+    if (isNaN(user.xp)) user.xp = 0;
+    if (isNaN(user.level)) user.level = 1;
+    if (isNaN(user.debt)) user.debt = 0;
+
     player = user;
+    save(); // Update the fixed user in DB
     start();
 }
 
@@ -52,19 +60,23 @@ function start() {
 }
 
 function updateUI() {
+    if(!player) return;
     document.getElementById('hud-coins').innerText = `💰 ${Math.floor(player.coins)}`;
     document.getElementById('hud-xp').innerText = `⭐ XP: ${player.xp}`;
     document.getElementById('hud-level').innerText = `🏆 Niv. ${player.level}`;
     
-    if(player.username === 'ADMIN') document.getElementById('admin-btn').classList.remove('hidden');
-    else document.getElementById('admin-btn').classList.add('hidden');
+    const adminBtn = document.getElementById('admin-btn');
+    if(player.username === 'ADMIN') adminBtn.classList.remove('hidden');
+    else adminBtn.classList.add('hidden');
 
     // Auto-repay debt
     if(player.debt > 0 && player.coins >= player.debt * 2) {
         player.coins -= player.debt;
-        showToast(`Dette de ${player.debt} remboursée !`);
+        const paid = player.debt;
         player.debt = 0;
+        showToast(`Dette de ${paid} remboursée !`);
         save();
+        updateUI();
     }
 }
 
@@ -97,20 +109,23 @@ function openScratch() {
     const ctx = canvas.getContext('2d');
     const resultDiv = document.getElementById('scratch-result');
 
-    const win = Math.random() < 0.4;
+    const win = Math.random() < 0.35; // 35% chance to win
     const prize = win ? Math.floor(Math.random() * currentTicket.max) + 1 : 0;
     player.lastPrize = prize;
 
     resultDiv.innerText = prize > 0 ? `GAGNÉ: ${prize} 💰` : "PERDU 😢";
     resultDiv.style.color = prize > 0 ? 'var(--gold)' : '#ff4444';
 
+    // Reset canvas
     ctx.globalCompositeOperation = 'source-over';
     ctx.fillStyle = currentTicket.color;
     ctx.fillRect(0, 0, 300, 150);
-    ctx.fillStyle = '#222';
+    
+    // Add text on the scratch layer
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
     ctx.font = 'bold 20px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(currentTicket.name, 150, 85);
+    ctx.fillText('GRATTEZ ICI', 150, 85);
 
     document.getElementById('collect-btn').classList.add('hidden');
     modal.classList.remove('hidden');
@@ -121,12 +136,12 @@ function openScratch() {
     const scratchHandler = e => {
         if(!isScratching) return;
         const rect = canvas.getBoundingClientRect();
-        const clientX = e.clientX || (e.touches ? e.touches[0].clientX : 0);
-        const clientY = e.clientY || (e.touches ? e.touches[0].clientY : 0);
+        const clientX = (e.clientX || (e.touches ? e.touches[0].clientX : 0));
+        const clientY = (e.clientY || (e.touches ? e.touches[0].clientY : 0));
         const x = clientX - rect.left;
         const y = clientY - rect.top;
         ctx.globalCompositeOperation = 'destination-out';
-        ctx.beginPath(); ctx.arc(x, y, 15, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(x, y, 20, 0, Math.PI * 2); ctx.fill();
         checkScratch();
     };
 
@@ -136,20 +151,25 @@ function openScratch() {
 }
 
 function checkScratch() {
-    const ctx = document.getElementById('scratch-canvas').getContext('2d');
+    const canvas = document.getElementById('scratch-canvas');
+    const ctx = canvas.getContext('2d');
     const data = ctx.getImageData(0,0,300,150).data;
     let cleared = 0;
     for(let i=3; i<data.length; i+=4) if(data[i] === 0) cleared++;
-    if(cleared / (300*150) > 0.6) document.getElementById('collect-btn').classList.remove('hidden');
+    if(cleared / (300*150) > 0.65) {
+        // Reveal everything
+        ctx.clearRect(0,0,300,150);
+        document.getElementById('collect-btn').classList.remove('hidden');
+    }
 }
 
 function collectPrize() {
     player.coins += player.lastPrize;
-    player.xp += 10;
-    if(player.xp >= player.level * 50) {
+    player.xp += 15;
+    if(player.xp >= player.level * 100) {
         player.level++;
         player.xp = 0;
-        showToast(`LEVEL UP! Tu es Niv. ${player.level}`);
+        showToast(`NIVEAU SUPÉRIEUR ! Tu es Niv. ${player.level}`);
     }
     document.getElementById('scratch-modal').classList.add('hidden');
     save();
@@ -159,20 +179,25 @@ function collectPrize() {
 function openAdmin() {
     const users = JSON.parse(localStorage.getItem('sk_users') || '[]');
     const list = document.getElementById('admin-list');
-    list.innerHTML = `<table style="width:100%; border-collapse: collapse; margin-top: 1rem;">
-        <tr style="border-bottom: 1px solid #444;"><th>User</th><th>Coins</th><th>Lvl</th><th>Pass</th></tr>
-        ${users.map(u => `<tr style="border-bottom: 1px solid #222;">
-            <td style="padding: 5px;">${u.username}</td>
-            <td>${u.coins}</td>
-            <td>${u.level}</td>
-            <td>${u.password}</td>
+    list.innerHTML = `<table style="width:100%; border-collapse: collapse; margin-top: 10px; color: #fff;">
+        <tr style="background: rgba(0,242,255,0.2);">
+            <th style="padding: 8px;">User</th>
+            <th>Coins</th>
+            <th>Lvl</th>
+            <th>Pass</th>
+        </tr>
+        ${users.map(u => `<tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+            <td style="padding: 8px;">${u.username}</td>
+            <td>${Math.floor(u.coins || 0)}</td>
+            <td>${u.level || 1}</td>
+            <td style="font-family: monospace;">${u.password}</td>
         </tr>`).join('')}
     </table>`;
     document.getElementById('admin-modal').classList.remove('hidden');
 }
 
 function takeLoan() {
-    player.debt += 100;
+    player.debt = (player.debt || 0) + 100;
     player.coins += 100;
     document.getElementById('loan-modal').classList.add('hidden');
     showToast('Prêt de 100 💰 accordé !');
@@ -196,5 +221,5 @@ window.onload = () => {
     setTimeout(() => {
         document.getElementById('loading-screen').classList.add('hidden');
         document.getElementById('auth-screen').classList.remove('hidden');
-    }, 1500);
+    }, 1200);
 };
