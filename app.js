@@ -1,5 +1,5 @@
 /**
- * WAVE RUNNER - Full Game Logic
+ * WAVE RUNNER - Core Engine v2
  */
 
 // === DB & SESSION ===
@@ -15,8 +15,8 @@ const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 500;
 const GRAVITY = 0.6;
 const JUMP_FORCE = -12;
-const INITIAL_SPEED = 5;
-const SPEED_INC = 0.0005;
+const INITIAL_SPEED = 6;
+const SPEED_INC = 0.0008;
 
 // === STATE ===
 let player = null;
@@ -35,7 +35,7 @@ const elements = {
   loading: document.getElementById('loading-screen'),
   auth: document.getElementById('auth-screen'),
   menu: document.getElementById('menu-screen'),
-  game: document.getElementById('game-container'),
+  game: document.getElementById('game-screen'),
   canvas: document.getElementById('game-canvas'),
   ctx: document.getElementById('game-canvas').getContext('2d'),
   modals: {
@@ -47,7 +47,8 @@ const elements = {
   stats: {
     coins: document.querySelectorAll('.coins-value'),
     level: document.querySelectorAll('.level-value'),
-    xp: document.querySelectorAll('.xp-fill')
+    xp: document.querySelectorAll('.xp-fill'),
+    username: document.querySelector('.username-display')
   }
 };
 
@@ -66,6 +67,8 @@ function updateUI() {
   if (!player) return;
   elements.stats.coins.forEach(el => el.textContent = Math.floor(player.coins));
   elements.stats.level.forEach(el => el.textContent = player.level);
+  if (elements.stats.username) elements.stats.username.textContent = player.username;
+  
   const nextXP = player.level * 100;
   elements.stats.xp.forEach(el => el.style.width = `${(player.xp / nextXP) * 100}%`);
 }
@@ -76,8 +79,8 @@ class WavePlayer {
     this.username = username;
     this.x = 100;
     this.y = 300;
-    this.width = 50;
-    this.height = 50;
+    this.width = 45;
+    this.height = 45;
     this.dy = 0;
     this.jumpCount = 0;
     this.maxJumps = 2;
@@ -89,9 +92,7 @@ class WavePlayer {
     this.coins = 0;
     this.highscore = 0;
     this.activeSkin = 'default';
-    this.activeTheme = 'classic';
     this.ownedSkins = ['default'];
-    this.ownedThemes = ['classic'];
     this.upgrades = { jump: 0, speed: 0, coins: 0 };
   }
 
@@ -99,13 +100,14 @@ class WavePlayer {
     this.dy += GRAVITY;
     this.y += this.dy;
 
-    if (this.y + this.height > CANVAS_HEIGHT - 50) {
-      this.y = CANVAS_HEIGHT - 50 - this.height;
+    const groundY = CANVAS_HEIGHT - 60;
+    if (this.y + this.height > groundY) {
+      this.y = groundY - this.height;
       this.dy = 0;
       this.jumpCount = 0;
       this.angle = 0;
     } else {
-      this.angle += 0.1;
+      this.angle += 0.15;
     }
   }
 
@@ -115,19 +117,23 @@ class WavePlayer {
     ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
     ctx.rotate(this.angle);
     
-    // Draw Skin
-    ctx.fillStyle = this.activeSkin === 'gold' ? '#f1c40f' : '#3498db';
+    // Body
+    ctx.fillStyle = '#3498db';
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = 'rgba(52, 152, 219, 0.5)';
     ctx.beginPath();
-    ctx.roundRect(-this.width/2, -this.height/2, this.width, this.height, 10);
+    ctx.roundRect(-this.width/2, -this.height/2, this.width, this.height, 12);
     ctx.fill();
-    ctx.strokeStyle = 'white';
-    ctx.lineWidth = 2;
+    
+    // Glow effect
+    ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+    ctx.lineWidth = 3;
     ctx.stroke();
     
-    // Eyes
+    // Face
     ctx.fillStyle = 'white';
     ctx.beginPath();
-    ctx.arc(10, -10, 5, 0, Math.PI * 2);
+    ctx.arc(12, -8, 4, 0, Math.PI * 2);
     ctx.fill();
     
     ctx.restore();
@@ -137,18 +143,20 @@ class WavePlayer {
     if (this.jumpCount < this.maxJumps) {
       this.dy = JUMP_FORCE;
       this.jumpCount++;
-      createParticles(this.x, this.y + this.height, '#fff', 5);
+      createParticles(this.x, this.y + this.height, '#fff', 8);
     }
   }
 }
 
 class Obstacle {
   constructor() {
-    this.width = 40 + Math.random() * 40;
-    this.height = 40 + Math.random() * 80;
-    this.x = CANVAS_WIDTH;
-    this.y = CANVAS_HEIGHT - 50 - this.height;
-    this.color = '#e74c3c';
+    const types = ['spike', 'block', 'wall'];
+    this.type = types[Math.floor(Math.random() * types.length)];
+    this.width = 40 + Math.random() * 30;
+    this.height = this.type === 'wall' ? 120 : 50 + Math.random() * 40;
+    this.x = CANVAS_WIDTH + 100;
+    this.y = CANVAS_HEIGHT - 60 - this.height;
+    this.color = '#ff4757';
   }
 
   update() {
@@ -158,11 +166,18 @@ class Obstacle {
   draw() {
     const { ctx } = elements;
     ctx.fillStyle = this.color;
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = 'rgba(255, 71, 87, 0.4)';
     ctx.beginPath();
-    ctx.roundRect(this.x, this.y, this.width, this.height, 5);
+    if (this.type === 'spike') {
+      ctx.moveTo(this.x, this.y + this.height);
+      ctx.lineTo(this.x + this.width/2, this.y);
+      ctx.lineTo(this.x + this.width, this.y + this.height);
+    } else {
+      ctx.roundRect(this.x, this.y, this.width, this.height, 8);
+    }
     ctx.fill();
-    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
-    ctx.stroke();
+    ctx.shadowBlur = 0;
   }
 }
 
@@ -170,9 +185,9 @@ function createParticles(x, y, color, count) {
   for (let i = 0; i < count; i++) {
     particles.push({
       x, y,
-      dx: (Math.random() - 0.5) * 10,
-      dy: (Math.random() - 0.5) * 10,
-      size: Math.random() * 5 + 2,
+      dx: (Math.random() - 0.5) * 8,
+      dy: (Math.random() - 0.5) * 8,
+      size: Math.random() * 4 + 2,
       life: 1.0,
       color
     });
@@ -182,31 +197,33 @@ function createParticles(x, y, color, count) {
 // === ENGINE ===
 function spawnObstacle() {
   const now = Date.now();
-  if (now - lastSpawnTime > 2000 / (gameSpeed / 5)) {
+  const minInterval = 1500 / (gameSpeed / 6);
+  if (now - lastSpawnTime > minInterval + Math.random() * 1000) {
     obstacles.push(new Obstacle());
     lastSpawnTime = now;
   }
 }
 
 function checkCollision(p, o) {
-  return p.x < o.x + o.width &&
-         p.x + p.width > o.x &&
-         p.y < o.y + o.height &&
-         p.y + p.height > o.y;
+  const padding = 5;
+  return p.x + padding < o.x + o.width - padding &&
+         p.x + p.width - padding > o.x + padding &&
+         p.y + padding < o.y + o.height - padding &&
+         p.y + p.height - padding > o.y + padding;
 }
 
 function gameOver() {
   gameState = 'gameover';
-  cancelAnimationFrame(animationId);
+  createParticles(player.x, player.y, '#3498db', 20);
   
-  // Save Stats
-  const earnedCoins = Math.floor(score / 10);
-  const earnedXP = Math.floor(score / 5);
+  // Stats
+  const earnedCoins = Math.floor(score / 8);
+  const earnedXP = Math.floor(score / 4);
   player.coins += earnedCoins;
   player.xp += earnedXP;
   if (score > player.highscore) player.highscore = score;
   
-  // Level Up Check
+  // Level Up
   const nextXP = player.level * 100;
   if (player.xp >= nextXP) {
     player.level++;
@@ -219,29 +236,27 @@ function gameOver() {
   
   document.getElementById('final-score').textContent = score;
   document.getElementById('final-distance').textContent = Math.floor(distance) + 'm';
-  elements.modals.gameover.classList.add('active');
+  elements.modals.gameover.classList.remove('hidden');
 }
 
 function showLevelUp() {
-  elements.modals.levelup.classList.add('active');
-  setTimeout(() => elements.modals.levelup.classList.remove('active'), 3000);
+  elements.modals.levelup.classList.remove('hidden');
+  setTimeout(() => elements.modals.levelup.classList.add('hidden'), 3000);
 }
 
 function gameLoop(timestamp) {
   if (gameState !== 'playing') return;
   
-  const deltaTime = timestamp - lastFrameTime;
-  lastFrameTime = timestamp;
-  
   const { ctx } = elements;
   ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
   
-  // Draw Background Waves (Simple)
-  ctx.fillStyle = 'rgba(255,255,255,0.05)';
-  for (let i = 0; i < 3; i++) {
+  // Background Decoration
+  ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+  ctx.lineWidth = 2;
+  for(let i=0; i<5; i++) {
     ctx.beginPath();
-    ctx.moveTo(0, CANVAS_HEIGHT - 40 - i * 10);
-    ctx.lineTo(CANVAS_WIDTH, CANVAS_HEIGHT - 40 - i * 10);
+    ctx.moveTo(0, 100 + i*80);
+    ctx.lineTo(CANVAS_WIDTH, 120 + i*80);
     ctx.stroke();
   }
 
@@ -264,7 +279,7 @@ function gameLoop(timestamp) {
   particles.forEach((p, idx) => {
     p.x += p.dx;
     p.y += p.dy;
-    p.life -= 0.02;
+    p.life -= 0.025;
     if (p.life <= 0) particles.splice(idx, 1);
     ctx.globalAlpha = p.life;
     ctx.fillStyle = p.color;
@@ -273,45 +288,49 @@ function gameLoop(timestamp) {
   });
 
   distance += gameSpeed / 60;
-  document.getElementById('distance-value').textContent = Math.floor(distance) + 'm';
+  document.getElementById('distance-value').textContent = Math.floor(distance);
   gameSpeed += SPEED_INC;
   
   animationId = requestAnimationFrame(gameLoop);
 }
 
-// === AUTH LOGIC ===
-function login(username, password) {
+// === AUTH & UI ===
+function login(u) {
   const users = db.users;
-  const user = users.find(u => u.username === username);
+  const user = users.find(x => x.username === u);
   if (user) {
-    player = Object.assign(new WavePlayer(username), user);
-    db.session = username;
-    initMenu();
+    player = Object.assign(new WavePlayer(u), user);
+    db.session = u;
+    showScreen('menu');
   } else {
-    alert('User not found. Please register.');
+    alert('Utilisateur inconnu');
   }
 }
 
-function register(username, password) {
+function register(u) {
+  if (!u || u.length < 3) return alert('Nom trop court');
   const users = db.users;
-  if (users.find(u => u.username === username)) return alert('Username taken');
+  if (users.find(x => x.username === u)) return alert('Nom déjà pris');
   
-  const newPlayer = new WavePlayer(username);
+  const newPlayer = new WavePlayer(u);
   users.push(newPlayer);
   db.users = users;
-  login(username, password);
+  login(u);
 }
 
-function initMenu() {
-  elements.auth.classList.remove('active');
-  elements.menu.classList.add('active');
+function showScreen(screenId) {
+  Object.values(elements).forEach(el => {
+    if (el && el.classList && el.classList.contains('screen')) {
+      el.classList.add('hidden');
+    }
+  });
+  elements[screenId].classList.remove('hidden');
   updateUI();
 }
 
 function startGame() {
-  elements.menu.classList.remove('active');
-  elements.modals.gameover.classList.remove('active');
-  elements.game.classList.add('active');
+  showScreen('game');
+  elements.modals.gameover.classList.add('hidden');
   
   gameState = 'playing';
   score = 0;
@@ -319,13 +338,10 @@ function startGame() {
   gameSpeed = INITIAL_SPEED;
   obstacles = [];
   particles = [];
-  document.getElementById('score-value').textContent = '0';
   
-  player.x = 100;
   player.y = 300;
   player.dy = 0;
   
-  lastFrameTime = performance.now();
   requestAnimationFrame(gameLoop);
 }
 
@@ -337,47 +353,59 @@ window.addEventListener('keydown', (e) => {
   }
 });
 
-gameCanvas.addEventListener('touchstart', () => {
+elements.canvas.addEventListener('mousedown', () => {
   if (gameState === 'playing') player.jump();
 });
 
-// Auth Buttons
-document.getElementById('login-btn').onclick = () => {
-  const u = document.getElementById('username').value;
-  if (u) login(u, '123');
+// Auth
+document.getElementById('login-btn').onclick = () => login(document.getElementById('username').value);
+document.getElementById('register-btn').onclick = () => register(document.getElementById('reg-username').value);
+
+document.getElementById('tab-register').onclick = () => {
+  document.getElementById('form-login').classList.add('hidden');
+  document.getElementById('form-register').classList.remove('hidden');
+  document.getElementById('tab-register').classList.add('active');
+  document.getElementById('tab-login').classList.remove('active');
 };
 
-document.getElementById('register-btn').onclick = () => {
-  const u = document.getElementById('username').value;
-  if (u) register(u, '123');
+document.getElementById('tab-login').onclick = () => {
+  document.getElementById('form-register').classList.add('hidden');
+  document.getElementById('form-login').classList.remove('hidden');
+  document.getElementById('tab-login').classList.add('active');
+  document.getElementById('tab-register').classList.remove('active');
 };
 
+// Menu
 document.getElementById('start-game').onclick = startGame;
 document.getElementById('restart-btn').onclick = startGame;
+document.getElementById('back-menu-btn').onclick = () => {
+  elements.modals.gameover.classList.add('hidden');
+  showScreen('menu');
+};
 
-// Modal Toggles
-document.getElementById('open-shop').onclick = () => elements.modals.shop.classList.add('active');
+// Modals
+document.getElementById('open-shop').onclick = () => elements.modals.shop.classList.remove('hidden');
 document.getElementById('open-leaderboard').onclick = () => {
   const list = document.getElementById('leaderboard-list');
   list.innerHTML = db.users
     .sort((a,b) => b.highscore - a.highscore)
     .slice(0, 10)
-    .map((u, i) => `<li><span>${i+1}. ${u.username}</span> <span>${u.highscore} pts</span></li>`)
+    .map((u, i) => `<li><span class="rank">${i+1}</span> <span class="name">${u.username}</span> <span class="pts">${u.highscore} pts</span></li>`)
     .join('');
-  elements.modals.leaderboard.classList.add('active');
+  elements.modals.leaderboard.classList.remove('hidden');
 };
 
 document.querySelectorAll('.close-modal').forEach(btn => {
   btn.onclick = () => {
-    elements.modals.shop.classList.remove('active');
-    elements.modals.leaderboard.classList.remove('active');
+    elements.modals.shop.classList.add('hidden');
+    elements.modals.leaderboard.classList.add('hidden');
   };
 });
 
 // Boot
 setTimeout(() => {
-  elements.loading.classList.remove('active');
+  elements.loading.classList.add('hidden');
   const session = db.session;
-  if (session) login(session, '123');
-  else elements.auth.classList.add('active');
-}, 2000);
+  if (session) login(session);
+  else showScreen('auth');
+}, 1500);
