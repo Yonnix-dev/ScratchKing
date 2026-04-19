@@ -3,97 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🌊 Wave Runner</title>    <link rel="stylesheet" href="style.css">
+    <title>🌊 Wave Runner</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <!-- LOADING -->
-    <div id="loading-screen">
-        <h1>🎰 ScratchKing</h1>
-            <h1 class="game-logo">🌊 WAVE RUNNER</h1>        <p>Chargement...</p>
+    <!-- LOADING SCREEN -->
+    <div id="loading-screen" class="active">
+        <div class="loading-content">
+            <h1 class="game-logo">🌊 WAVE RUNNER</h1>
+            <p>Chargement du monde sous-marin...</p>
+            <div class="loading-bar"><div class="loading-fill"></div></div>
+        </div>
     </div>
 
-    <!-- AUTH -->
-    <div id="auth-screen" class="hidden">
+    <!-- AUTH SCREEN -->
+    <div id="auth-screen" class="screen hidden">
         <div class="auth-card">
-            <h1>🎰 ScratchKing</h1>
+            <h1>🌊 WAVE RUNNER</h1>
             <div class="auth-tabs">
                 <button class="tab active" id="tab-login">Connexion</button>
                 <button class="tab" id="tab-register">Inscription</button>
             </div>
             
             <div id="form-login">
-                <input type="text" id="login-user" placeholder="Nom d'utilisateur">
-                <input type="password" id="login-pass" placeholder="Mot de passe">
-                <button class="btn-primary" id="btn-login">Se connecter</button>
-            </div>
-
-            <div id="form-register" class="hidden">
-                <input type="text" id="reg-user" placeholder="Nom d'utilisateur">
-                <input type="password" id="reg-pass" placeholder="Mot de passe">
-                <button class="btn-primary" id="btn-register">Créer mon compte</button>
+                <input type="text" id="username" placeholder="Nom d'utilisateur">
+                <button class="btn-primary" id="login-btn">Rejoindre l'aventure</button>
             </div>
             
-            <p id="auth-error" style="color: #ff6b6b; text-align: center; margin-top: 1rem;"></p>
+            <div id="form-register" class="hidden">
+                <input type="text" id="reg-username" placeholder="Choisir un nom">
+                <button class="btn-primary" id="register-btn">Créer mon compte</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MENU SCREEN -->
+    <div id="menu-screen" class="screen hidden">
+        <div class="menu-container">
+            <h1 class="game-logo">🌊 WAVE RUNNER</h1>
+            
+            <div class="user-profile">
+                <div class="profile-main">
+                    <span class="username-display">Voyageur</span>
+                    <span class="level-badge">Niv. <span class="level-value">1</span></span>
+                </div>
+                <div class="xp-bar-container">
+                    <div class="xp-fill"></div>
+                </div>
+            </div>
+
+            <div class="menu-stats">
+                <div class="stat-item">
+                    <span class="stat-label">Pièces 🪙</span>
+                    <span class="coins-value">0</span>
+                </div>
+            </div>
+
+            <div class="menu-actions">
+                <button id="start-game" class="btn-action pulse">LANCER LA VAGUE</button>
+                <div class="secondary-actions">
+                    <button id="open-shop" class="btn-secondary">BOUTIQUE 🛒</button>
+                    <button id="open-leaderboard" class="btn-secondary">CLASSEMENT 🏆</button>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- GAME SCREEN -->
-    <div id="game-screen" class="hidden">
-        <div class="hud">
-            <div class="hud-item" id="hud-credits">💰 500</div>
-            <div class="hud-item" id="hud-xp">⭐ XP: 0</div>
-            <div class="hud-item" id="hud-level">🏆 Niv. 1</div>
-            <div class="hud-item hidden" id="hud-debt" style="color:#ff6b6b">💳 Dette: 0</div>
-            
-            <div class="hud-actions">
-                <button class="btn-icon" id="leaderboard-btn" title="Classement">🏆</button>
-                <button class="btn-icon" id="shop-btn">🛒 Boutique</button>
-                <button class="btn-icon hidden" id="admin-btn">⚙️ ADMIN</button>
-                <button class="btn-icon logout" id="logout-btn">🚪 Logout</button>
+    <div id="game-screen" class="screen hidden">
+        <div class="game-hud">
+            <div class="hud-left">
+                <div class="hud-item">Score: <span id="score-value">0</span></div>
+                <div class="hud-item"><span id="distance-value">0</span>m</div>
+            </div>
+            <div class="hud-right">
+                <div class="hud-item">🪙 <span class="coins-value">0</span></div>
             </div>
         </div>
-
-        <div id="tickets-grid">
-            <!-- Dynamically filled -->
-        </div>
-    </div>
-
-    <!-- SCRATCH MODAL -->
-    <div id="scratch-modal" class="modal hidden">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="scratch-title">Ticket</h2>
-                <button class="btn-close" id="close-scratch">&times;</button>
-            </div>
-            <div id="scratch-area">
-                <canvas id="scratch-canvas" width="400" height="250"></canvas>
-                <div id="scratch-result" class="scratch-result hidden"></div>
-            </div>
-        </div>
+        <canvas id="game-canvas"></canvas>
     </div>
 
     <!-- SHOP MODAL -->
     <div id="shop-modal" class="modal hidden">
-        <div class="modal-content shop-content">
+        <div class="modal-content">
             <div class="modal-header">
-                <h2>Boutique & Roulette</h2>
-                <button class="btn-close" id="close-shop">&times;</button>
+                <h2>Boutique Marine</h2>
+                <button class="close-modal">&times;</button>
             </div>
-            
             <div class="shop-grid">
-                <div class="roulette-section">
-                    <h3>🎰 Roulette Journalière</h3>
-                    <div class="roulette-container">
-                        <canvas id="roulette-canvas" width="200" height="200"></canvas>
-                        <button class="btn-primary" id="spin-btn">TOURNER !</button>
-                        <p id="roulette-timer"></p>
+                <div class="shop-section">
+                    <h3>Apparences</h3>
+                    <div class="skins-grid" id="skins-container">
+                        <!-- Dynamically filled -->
                     </div>
-                </div>
-                
-                <div class="skins-section">
-                    <h3>🎨 Personnalisation</h3>
-                    <div id="skins-list"></div>
                 </div>
             </div>
         </div>
@@ -103,55 +106,43 @@
     <div id="leaderboard-modal" class="modal hidden">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>🏆 Classement Mondial</h2>
-                <button class="btn-close" id="close-leaderboard">&times;</button>
+                <h2>Légendes de l'Océan</h2>
+                <button class="close-modal">&times;</button>
             </div>
-            <div class="leaderboard-tabs">
-                <button class="tab active" data-type="credits">💰 Riches</button>
-                <button class="tab" data-type="xp">⭐ Niveau</button>
-            </div>
-            <table class="stats-table">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Joueur</th>
-                        <th id="lb-val-header">Crédits</th>
-                    </tr>
-                </thead>
-                <tbody id="leaderboard-tbody"></tbody>
-            </table>
+            <ul id="leaderboard-list" class="leaderboard-list">
+                <!-- Dynamically filled -->
+            </ul>
         </div>
     </div>
 
-    <!-- LOAN MODAL -->
-    <div id="loan-modal" class="modal hidden">
-        <div class="modal-content">
-            <h2>💸 Plus de crédits ?</h2>
-            <p>On peut te prêter 100 💰, mais il faudra rembourser avec les gains !</p>
-            <div style="display:flex; gap:10px; margin-top:20px;">
-                <button class="btn-primary" id="accept-loan">Accepter</button>
-                <button class="btn-primary" id="decline-loan" style="background:#444">Refuser</button>
+    <!-- GAMEOVER MODAL -->
+    <div id="gameover-modal" class="modal hidden">
+        <div class="modal-content gameover-content">
+            <h1>VAGUE TERMINÉE</h1>
+            <div class="final-stats">
+                <div class="stat">
+                    <span>Score</span>
+                    <span id="final-score">0</span>
+                </div>
+                <div class="stat">
+                    <span>Distance</span>
+                    <span id="final-distance">0m</span>
+                </div>
+            </div>
+            <div class="gameover-buttons">
+                <button id="restart-btn" class="btn-action">REPARTIR</button>
+                <button id="back-menu-btn" class="btn-secondary">MENU</button>
             </div>
         </div>
     </div>
 
-    <!-- ADMIN MODAL -->
-    <div id="admin-modal" class="modal hidden">
-        <div class="modal-content" style="max-width:800px">
-            <div class="modal-header">
-                <h2>⚙️ Panneau Admin</h2>
-                <button class="btn-close" id="close-admin">&times;</button>
-            </div>
-            <table class="stats-table">
-                <thead>
-                    <tr><th>User</th><th>💰</th><th>XP</th><th>Pass</th></tr>
-                </thead>
-                <tbody id="admin-tbody"></tbody>
-            </table>
+    <!-- LEVEL UP NOTIFICATION -->
+    <div id="levelup-modal" class="levelup-notif hidden">
+        <div class="levelup-content">
+            <h2>NIVEAU SUPÉRIEUR !</h2>
+            <p>Niveau <span class="level-value">2</span> atteint</p>
         </div>
     </div>
-
-    <div id="toast-container"></div>
 
     <script src="app.js"></script>
 </body>
