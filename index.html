@@ -3,147 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🌊 Wave Runner</title>
+    <title>👑 Scratch King - Tickets à Gratter</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-    <!-- LOADING SCREEN -->
-    <div id="loading-screen" class="active">
+    <div id="loading-screen">
         <div class="loading-content">
-            <h1 class="game-logo">🌊 WAVE RUNNER</h1>
-            <p>Chargement du monde sous-marin...</p>
-            <div class="loading-bar"><div class="loading-fill"></div></div>
+            <h1 class="game-logo">👑 SCRATCH KING</h1>
+            <div class="spinner"></div>
+            <p>Préparation de vos gains...</p>
         </div>
     </div>
-
-    <!-- AUTH SCREEN -->
     <div id="auth-screen" class="screen hidden">
         <div class="auth-card">
-            <h1>🌊 WAVE RUNNER</h1>
+            <h1>👑 SCRATCH KING</h1>
             <div class="auth-tabs">
                 <button class="tab active" id="tab-login">Connexion</button>
                 <button class="tab" id="tab-register">Inscription</button>
             </div>
-            
             <div id="form-login">
                 <input type="text" id="username" placeholder="Nom d'utilisateur">
-                <button class="btn-primary" id="login-btn">Rejoindre l'aventure</button>
+                <button class="btn-primary" id="login-btn">Entrer au Casino</button>
             </div>
-            
             <div id="form-register" class="hidden">
-                <input type="text" id="reg-username" placeholder="Choisir un nom">
-                <button class="btn-primary" id="register-btn">Créer mon compte</button>
+                <input type="text" id="reg-username" placeholder="Choisir un pseudo">
+                <button class="btn-primary" id="register-btn">Ouvrir un compte</button>
             </div>
         </div>
     </div>
-
-    <!-- MENU SCREEN -->
-    <div id="menu-screen" class="screen hidden">
-        <div class="menu-container">
-            <h1 class="game-logo">🌊 WAVE RUNNER</h1>
-            
-            <div class="user-profile">
-                <div class="profile-main">
-                    <span class="username-display">Voyageur</span>
-                    <span class="level-badge">Niv. <span class="level-value">1</span></span>
-                </div>
-                <div class="xp-bar-container">
-                    <div class="xp-fill"></div>
-                </div>
-            </div>
-
-            <div class="menu-stats">
-                <div class="stat-item">
-                    <span class="stat-label">Pièces 🪙</span>
-                    <span class="coins-value">0</span>
-                </div>
-            </div>
-
-            <div class="menu-actions">
-                <button id="start-game" class="btn-action pulse">LANCER LA VAGUE</button>
-                <div class="secondary-actions">
-                    <button id="open-shop" class="btn-secondary">BOUTIQUE 🛒</button>
-                    <button id="open-leaderboard" class="btn-secondary">CLASSEMENT 🏆</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- GAME SCREEN -->
     <div id="game-screen" class="screen hidden">
-        <div class="game-hud">
-            <div class="hud-left">
-                <div class="hud-item">Score: <span id="score-value">0</span></div>
-                <div class="hud-item"><span id="distance-value">0</span>m</div>
+        <header class="hud">
+            <div class="user-info">
+                <span class="username-display">Voyageur</span>
+                <span class="level-badge">Niv. <span class="level-value">1</span></span>
             </div>
-            <div class="hud-right">
-                <div class="hud-item">🪙 <span class="coins-value">0</span></div>
+            <div class="stats">
+                <div class="hud-item">💰 <span class="coins-value">500</span></div>
             </div>
-        </div>
-        <canvas id="game-canvas"></canvas>
+        </header>
+        <main id="tickets-grid"></main>
     </div>
-
-    <!-- SHOP MODAL -->
-    <div id="shop-modal" class="modal hidden">
+    <div id="scratch-modal" class="modal hidden">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Boutique Marine</h2>
-                <button class="close-modal">&times;</button>
+                <h2 id="ticket-title">Ticket de Jeu</h2>
+                <button class="btn-close" id="close-scratch">&times;</button>
             </div>
-            <div class="shop-grid">
-                <div class="shop-section">
-                    <h3>Apparences</h3>
-                    <div class="skins-grid" id="skins-container">
-                        <!-- Dynamically filled -->
-                    </div>
-                </div>
+            <div id="scratch-area">
+                <div id="scratch-result" class="scratch-result"></div>
+                <canvas id="scratch-canvas"></canvas>
             </div>
-        </div>
-    </div>
-
-    <!-- LEADERBOARD MODAL -->
-    <div id="leaderboard-modal" class="modal hidden">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Légendes de l'Océan</h2>
-                <button class="close-modal">&times;</button>
-            </div>
-            <ul id="leaderboard-list" class="leaderboard-list">
-                <!-- Dynamically filled -->
-            </ul>
-        </div>
-    </div>
-
-    <!-- GAMEOVER MODAL -->
-    <div id="gameover-modal" class="modal hidden">
-        <div class="modal-content gameover-content">
-            <h1>VAGUE TERMINÉE</h1>
-            <div class="final-stats">
-                <div class="stat">
-                    <span>Score</span>
-                    <span id="final-score">0</span>
-                </div>
-                <div class="stat">
-                    <span>Distance</span>
-                    <span id="final-distance">0m</span>
-                </div>
-            </div>
-            <div class="gameover-buttons">
-                <button id="restart-btn" class="btn-action">REPARTIR</button>
-                <button id="back-menu-btn" class="btn-secondary">MENU</button>
+            <div class="scratch-footer">
+                <p id="scratch-instruction">Grattez pour découvrir votre gain !</p>
+                <button id="collect-btn" class="btn-primary hidden">Récupérer mes gains</button>
             </div>
         </div>
     </div>
-
-    <!-- LEVEL UP NOTIFICATION -->
-    <div id="levelup-modal" class="levelup-notif hidden">
-        <div class="levelup-content">
-            <h2>NIVEAU SUPÉRIEUR !</h2>
-            <p>Niveau <span class="level-value">2</span> atteint</p>
-        </div>
-    </div>
-
     <script src="app.js"></script>
 </body>
 </html>
