@@ -1,411 +1,150 @@
-/**
- * WAVE RUNNER - Core Engine v2
- */
-
-// === DB & SESSION ===
+/** SCRATCH KING **/
 const db = {
-  get users() { return JSON.parse(localStorage.getItem('wr_users')) || []; },
-  set users(v) { localStorage.setItem('wr_users', JSON.stringify(v)); },
-  get session() { return localStorage.getItem('wr_session'); },
-  set session(v) { localStorage.setItem('wr_session', v || ''); }
+    get users() { return JSON.parse(localStorage.getItem('sk_users')) || []; },
+    set users(v) { localStorage.setItem('sk_users', JSON.stringify(v)); },
+    get session() { return localStorage.getItem('sk_session'); },
+    set session(v) { localStorage.setItem('sk_session', v || ''); }
 };
-
-// === CONSTANTS ===
-const CANVAS_WIDTH = 800;
-const CANVAS_HEIGHT = 500;
-const GRAVITY = 0.6;
-const JUMP_FORCE = -12;
-const INITIAL_SPEED = 6;
-const SPEED_INC = 0.0008;
-
-// === STATE ===
-let player = null;
-let gameState = 'loading';
-let score = 0;
-let distance = 0;
-let gameSpeed = INITIAL_SPEED;
-let obstacles = [];
-let particles = [];
-let animationId = null;
-let lastSpawnTime = 0;
-let lastFrameTime = 0;
-
-// === ELEMENTS ===
+let currentPlayer = null;
+const TICKET_TYPES = [
+    { id: 'bronze', name: 'Ticket Bronze', price: 10, maxPrize: 50, color: '#cd7f32', emoji: '🥉' },
+    { id: 'silver', name: 'Ticket Argent', price: 50, maxPrize: 300, color: '#c0c0c0', emoji: '🥈' },
+    { id: 'gold', name: 'Ticket Or', price: 200, maxPrize: 1500, color: '#ffd700', emoji: '🥇' },
+    { id: 'diamond', name: 'Ticket Diamant', price: 1000, maxPrize: 10000, color: '#b9f2ff', emoji: '💎' }
+];
 const elements = {
-  loading: document.getElementById('loading-screen'),
-  auth: document.getElementById('auth-screen'),
-  menu: document.getElementById('menu-screen'),
-  game: document.getElementById('game-screen'),
-  canvas: document.getElementById('game-canvas'),
-  ctx: document.getElementById('game-canvas').getContext('2d'),
-  modals: {
-    shop: document.getElementById('shop-modal'),
-    leaderboard: document.getElementById('leaderboard-modal'),
-    gameover: document.getElementById('gameover-modal'),
-    levelup: document.getElementById('levelup-modal')
-  },
-  stats: {
-    coins: document.querySelectorAll('.coins-value'),
-    level: document.querySelectorAll('.level-value'),
-    xp: document.querySelectorAll('.xp-fill'),
-    username: document.querySelector('.username-display')
-  }
+    loading: document.getElementById('loading-screen'),
+    auth: document.getElementById('auth-screen'),
+    game: document.getElementById('game-screen'),
+    ticketsGrid: document.getElementById('tickets-grid'),
+    scratchModal: document.getElementById('scratch-modal'),
+    canvas: document.getElementById('scratch-canvas'),
+    result: document.getElementById('scratch-result'),
+    collectBtn: document.getElementById('collect-btn'),
+    coinsDisplay: document.querySelectorAll('.coins-value'),
+    usernameDisplay: document.querySelector('.username-display'),
+    tabLogin: document.getElementById('tab-login'),
+    tabRegister: document.getElementById('tab-register'),
+    formLogin: document.getElementById('form-login'),
+    formRegister: document.getElementById('form-register')
 };
 
-// === CORE FUNCTIONS ===
-function savePlayer() {
-  if (!player) return;
-  const users = db.users;
-  const idx = users.findIndex(u => u.username === player.username);
-  if (idx !== -1) {
-    users[idx] = player;
+function login(username) {
+    const users = db.users;
+    let user = users.find(u => u.username === username);
+    if (!user) return alert("Compte inconnu. Veuillez vous inscrire.");
+    currentPlayer = user;
+    db.session = username;
+    initApp();
+}
+function register(username) {
+    if (!username || username.length < 3) return alert("Pseudo trop court");
+    const users = db.users;
+    if (users.find(u => u.username === username)) return alert("Pseudo déjà pris");
+    const newUser = { username, coins: 500, level: 1, xp: 0, ticketsScratched: 0 };
+    users.push(newUser);
     db.users = users;
-  }
+    login(username);
 }
-
+function initApp() {
+    elements.loading.classList.add('hidden');
+    elements.auth.classList.add('hidden');
+    elements.game.classList.remove('hidden');
+    updateUI();
+    renderTickets();
+}
 function updateUI() {
-  if (!player) return;
-  elements.stats.coins.forEach(el => el.textContent = Math.floor(player.coins));
-  elements.stats.level.forEach(el => el.textContent = player.level);
-  if (elements.stats.username) elements.stats.username.textContent = player.username;
-  
-  const nextXP = player.level * 100;
-  elements.stats.xp.forEach(el => el.style.width = `${(player.xp / nextXP) * 100}%`);
+    if (!currentPlayer) return;
+    elements.coinsDisplay.forEach(el => el.textContent = currentPlayer.coins);
+    if (elements.usernameDisplay) elements.usernameDisplay.textContent = currentPlayer.username;
+}
+function renderTickets() {
+    elements.ticketsGrid.innerHTML = TICKET_TYPES.map(t => `
+        <div class="ticket-card" onclick="openTicket('${t.id}')">
+            <div class="t-emoji">${t.emoji}</div>
+            <h3>${t.name}</h3>
+            <p class="ticket-price">${t.price} 💰</p>
+            <p class="ticket-desc">Gagnez jusqu'à ${t.maxPrize} !</p>
+        </div>
+    `).join('');
 }
 
-// === GAME OBJECTS ===
-class WavePlayer {
-  constructor(username) {
-    this.username = username;
-    this.x = 100;
-    this.y = 300;
-    this.width = 45;
-    this.height = 45;
-    this.dy = 0;
-    this.jumpCount = 0;
-    this.maxJumps = 2;
-    this.angle = 0;
-    
-    // Stats
-    this.level = 1;
-    this.xp = 0;
-    this.coins = 0;
-    this.highscore = 0;
-    this.activeSkin = 'default';
-    this.ownedSkins = ['default'];
-    this.upgrades = { jump: 0, speed: 0, coins: 0 };
-  }
-
-  update() {
-    this.dy += GRAVITY;
-    this.y += this.dy;
-
-    const groundY = CANVAS_HEIGHT - 60;
-    if (this.y + this.height > groundY) {
-      this.y = groundY - this.height;
-      this.dy = 0;
-      this.jumpCount = 0;
-      this.angle = 0;
-    } else {
-      this.angle += 0.15;
-    }
-  }
-
-  draw() {
-    const { ctx } = elements;
-    ctx.save();
-    ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
-    ctx.rotate(this.angle);
-    
-    // Body
-    ctx.fillStyle = '#3498db';
-    ctx.shadowBlur = 15;
-    ctx.shadowColor = 'rgba(52, 152, 219, 0.5)';
-    ctx.beginPath();
-    ctx.roundRect(-this.width/2, -this.height/2, this.width, this.height, 12);
-    ctx.fill();
-    
-    // Glow effect
-    ctx.strokeStyle = 'rgba(255,255,255,0.8)';
-    ctx.lineWidth = 3;
-    ctx.stroke();
-    
-    // Face
-    ctx.fillStyle = 'white';
-    ctx.beginPath();
-    ctx.arc(12, -8, 4, 0, Math.PI * 2);
-    ctx.fill();
-    
-    ctx.restore();
-  }
-
-  jump() {
-    if (this.jumpCount < this.maxJumps) {
-      this.dy = JUMP_FORCE;
-      this.jumpCount++;
-      createParticles(this.x, this.y + this.height, '#fff', 8);
-    }
-  }
+let isScratching = false;
+let currentPrize = 0;
+function openTicket(typeId) {
+    const ticket = TICKET_TYPES.find(t => t.id === typeId);
+    if (currentPlayer.coins < ticket.price) return alert("Pas assez de jetons !");
+    currentPlayer.coins -= ticket.price;
+    updateUI();
+    savePlayer();
+    currentPrize = calculatePrize(ticket);
+    elements.result.innerHTML = currentPrize > 0 ? `GAGNÉ !<br>${currentPrize} 💰` : `PERDU...<br>😢`;
+    elements.result.style.color = currentPrize > 0 ? '#ffd700' : '#ff4757';
+    initScratchCanvas(ticket.color);
+    elements.scratchModal.classList.remove('hidden');
+    elements.collectBtn.classList.add('hidden');
+}
+function calculatePrize(ticket) {
+    const rand = Math.random();
+    if (rand > 0.4) return 0;
+    return Math.floor(Math.random() * ticket.maxPrize) + 1;
+}
+function initScratchCanvas(color) {
+    const canvas = elements.canvas;
+    const ctx = canvas.getContext('2d');
+    canvas.width = 400;
+    canvas.height = 250;
+    ctx.fillStyle = color;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = 'rgba(0,0,0,0.1)';
+    for(let i=0; i<100; i++) ctx.fillRect(Math.random()*canvas.width, Math.random()*canvas.height, 2, 2);
 }
 
-class Obstacle {
-  constructor() {
-    const types = ['spike', 'block', 'wall'];
-    this.type = types[Math.floor(Math.random() * types.length)];
-    this.width = 40 + Math.random() * 30;
-    this.height = this.type === 'wall' ? 120 : 50 + Math.random() * 40;
-    this.x = CANVAS_WIDTH + 100;
-    this.y = CANVAS_HEIGHT - 60 - this.height;
-    this.color = '#ff4757';
-  }
-
-  update() {
-    this.x -= gameSpeed;
-  }
-
-  draw() {
-    const { ctx } = elements;
-    ctx.fillStyle = this.color;
-    ctx.shadowBlur = 10;
-    ctx.shadowColor = 'rgba(255, 71, 87, 0.4)';
-    ctx.beginPath();
-    if (this.type === 'spike') {
-      ctx.moveTo(this.x, this.y + this.height);
-      ctx.lineTo(this.x + this.width/2, this.y);
-      ctx.lineTo(this.x + this.width, this.y + this.height);
-    } else {
-      ctx.roundRect(this.x, this.y, this.width, this.height, 8);
-    }
-    ctx.fill();
-    ctx.shadowBlur = 0;
-  }
+function scratch(e) {
+    if (!isScratching) return;
+    const rect = elements.canvas.getBoundingClientRect();
+    const x = (e.clientX || e.touches?.[0]?.clientX) - rect.left;
+    const y = (e.clientY || e.touches?.[0]?.clientY) - rect.top;
+    const ctx = elements.canvas.getContext('2d');
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.beginPath(); ctx.arc(x, y, 20, 0, Math.PI * 2); ctx.fill();
+    checkScratchProgress();
 }
-
-function createParticles(x, y, color, count) {
-  for (let i = 0; i < count; i++) {
-    particles.push({
-      x, y,
-      dx: (Math.random() - 0.5) * 8,
-      dy: (Math.random() - 0.5) * 8,
-      size: Math.random() * 4 + 2,
-      life: 1.0,
-      color
-    });
-  }
+function checkScratchProgress() {
+    const ctx = elements.canvas.getContext('2d');
+    const imageData = ctx.getImageData(0, 0, 400, 250);
+    let transparentPixels = 0;
+    for (let i = 3; i < imageData.data.length; i += 4) if (imageData.data[i] === 0) transparentPixels++;
+    if ((transparentPixels / (400 * 250)) * 100 > 60) revealTicket();
 }
-
-// === ENGINE ===
-function spawnObstacle() {
-  const now = Date.now();
-  const minInterval = 1500 / (gameSpeed / 6);
-  if (now - lastSpawnTime > minInterval + Math.random() * 1000) {
-    obstacles.push(new Obstacle());
-    lastSpawnTime = now;
-  }
+function revealTicket() {
+    elements.canvas.getContext('2d').clearRect(0, 0, 400, 250);
+    elements.collectBtn.classList.remove('hidden');
 }
-
-function checkCollision(p, o) {
-  const padding = 5;
-  return p.x + padding < o.x + o.width - padding &&
-         p.x + p.width - padding > o.x + padding &&
-         p.y + padding < o.y + o.height - padding &&
-         p.y + p.height - padding > o.y + padding;
+function savePlayer() {
+    const users = db.users;
+    const idx = users.findIndex(u => u.username === currentPlayer.username);
+    if (idx !== -1) { users[idx] = currentPlayer; db.users = users; }
 }
-
-function gameOver() {
-  gameState = 'gameover';
-  createParticles(player.x, player.y, '#3498db', 20);
-  
-  // Stats
-  const earnedCoins = Math.floor(score / 8);
-  const earnedXP = Math.floor(score / 4);
-  player.coins += earnedCoins;
-  player.xp += earnedXP;
-  if (score > player.highscore) player.highscore = score;
-  
-  // Level Up
-  const nextXP = player.level * 100;
-  if (player.xp >= nextXP) {
-    player.level++;
-    player.xp -= nextXP;
-    showLevelUp();
-  }
-  
-  savePlayer();
-  updateUI();
-  
-  document.getElementById('final-score').textContent = score;
-  document.getElementById('final-distance').textContent = Math.floor(distance) + 'm';
-  elements.modals.gameover.classList.remove('hidden');
-}
-
-function showLevelUp() {
-  elements.modals.levelup.classList.remove('hidden');
-  setTimeout(() => elements.modals.levelup.classList.add('hidden'), 3000);
-}
-
-function gameLoop(timestamp) {
-  if (gameState !== 'playing') return;
-  
-  const { ctx } = elements;
-  ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-  
-  // Background Decoration
-  ctx.strokeStyle = 'rgba(255,255,255,0.1)';
-  ctx.lineWidth = 2;
-  for(let i=0; i<5; i++) {
-    ctx.beginPath();
-    ctx.moveTo(0, 100 + i*80);
-    ctx.lineTo(CANVAS_WIDTH, 120 + i*80);
-    ctx.stroke();
-  }
-
-  player.update();
-  player.draw();
-  
-  spawnObstacle();
-  
-  obstacles.forEach((obs, idx) => {
-    obs.update();
-    obs.draw();
-    if (checkCollision(player, obs)) gameOver();
-    if (obs.x + obs.width < 0) {
-      obstacles.splice(idx, 1);
-      score += 10;
-      document.getElementById('score-value').textContent = score;
-    }
-  });
-  
-  particles.forEach((p, idx) => {
-    p.x += p.dx;
-    p.y += p.dy;
-    p.life -= 0.025;
-    if (p.life <= 0) particles.splice(idx, 1);
-    ctx.globalAlpha = p.life;
-    ctx.fillStyle = p.color;
-    ctx.fillRect(p.x, p.y, p.size, p.size);
-    ctx.globalAlpha = 1;
-  });
-
-  distance += gameSpeed / 60;
-  document.getElementById('distance-value').textContent = Math.floor(distance);
-  gameSpeed += SPEED_INC;
-  
-  animationId = requestAnimationFrame(gameLoop);
-}
-
-// === AUTH & UI ===
-function login(u) {
-  const users = db.users;
-  const user = users.find(x => x.username === u);
-  if (user) {
-    player = Object.assign(new WavePlayer(u), user);
-    db.session = u;
-    showScreen('menu');
-  } else {
-    alert('Utilisateur inconnu');
-  }
-}
-
-function register(u) {
-  if (!u || u.length < 3) return alert('Nom trop court');
-  const users = db.users;
-  if (users.find(x => x.username === u)) return alert('Nom déjà pris');
-  
-  const newPlayer = new WavePlayer(u);
-  users.push(newPlayer);
-  db.users = users;
-  login(u);
-}
-
-function showScreen(screenId) {
-  Object.values(elements).forEach(el => {
-    if (el && el.classList && el.classList.contains('screen')) {
-      el.classList.add('hidden');
-    }
-  });
-  elements[screenId].classList.remove('hidden');
-  updateUI();
-}
-
-function startGame() {
-  showScreen('game');
-  elements.modals.gameover.classList.add('hidden');
-  
-  gameState = 'playing';
-  score = 0;
-  distance = 0;
-  gameSpeed = INITIAL_SPEED;
-  obstacles = [];
-  particles = [];
-  
-  player.y = 300;
-  player.dy = 0;
-  
-  requestAnimationFrame(gameLoop);
-}
-
-// === EVENTS ===
-window.addEventListener('keydown', (e) => {
-  if (e.code === 'Space' || e.code === 'ArrowUp') {
-    if (gameState === 'playing') player.jump();
-    if (gameState === 'menu') startGame();
-  }
-});
-
-elements.canvas.addEventListener('mousedown', () => {
-  if (gameState === 'playing') player.jump();
-});
-
-// Auth
 document.getElementById('login-btn').onclick = () => login(document.getElementById('username').value);
 document.getElementById('register-btn').onclick = () => register(document.getElementById('reg-username').value);
-
-document.getElementById('tab-register').onclick = () => {
-  document.getElementById('form-login').classList.add('hidden');
-  document.getElementById('form-register').classList.remove('hidden');
-  document.getElementById('tab-register').classList.add('active');
-  document.getElementById('tab-login').classList.remove('active');
+document.getElementById('close-scratch').onclick = () => elements.scratchModal.classList.add('hidden');
+elements.tabLogin.onclick = () => { elements.formLogin.classList.remove('hidden'); elements.formRegister.classList.add('hidden'); elements.tabLogin.classList.add('active'); elements.tabRegister.classList.remove('active'); };
+elements.tabRegister.onclick = () => { elements.formLogin.classList.add('hidden'); elements.formRegister.classList.remove('hidden'); elements.tabRegister.classList.add('active'); elements.tabLogin.classList.remove('active'); };
+elements.collectBtn.onclick = () => { currentPlayer.coins += currentPrize; currentPlayer.ticketsScratched++; savePlayer(); updateUI(); elements.scratchModal.classList.add('hidden'); };
+elements.canvas.onmousedown = () => isScratching = true;
+window.onmouseup = () => isScratching = false;
+elements.canvas.onmousemove = scratch;
+elements.canvas.ontouchstart = () => isScratching = true;
+elements.canvas.ontouchend = () => isScratching = false;
+elements.canvas.ontouchmove = scratch;
+window.onload = () => {
+    setTimeout(() => {
+        const session = db.session;
+        if (session) {
+            const user = db.users.find(u => u.username === session);
+            if (user) { currentPlayer = user; initApp(); }
+            else { elements.loading.classList.add('hidden'); elements.auth.classList.remove('hidden'); }
+        } else { elements.loading.classList.add('hidden'); elements.auth.classList.remove('hidden'); }
+    }, 1500);
 };
-
-document.getElementById('tab-login').onclick = () => {
-  document.getElementById('form-register').classList.add('hidden');
-  document.getElementById('form-login').classList.remove('hidden');
-  document.getElementById('tab-login').classList.add('active');
-  document.getElementById('tab-register').classList.remove('active');
-};
-
-// Menu
-document.getElementById('start-game').onclick = startGame;
-document.getElementById('restart-btn').onclick = startGame;
-document.getElementById('back-menu-btn').onclick = () => {
-  elements.modals.gameover.classList.add('hidden');
-  showScreen('menu');
-};
-
-// Modals
-document.getElementById('open-shop').onclick = () => elements.modals.shop.classList.remove('hidden');
-document.getElementById('open-leaderboard').onclick = () => {
-  const list = document.getElementById('leaderboard-list');
-  list.innerHTML = db.users
-    .sort((a,b) => b.highscore - a.highscore)
-    .slice(0, 10)
-    .map((u, i) => `<li><span class="rank">${i+1}</span> <span class="name">${u.username}</span> <span class="pts">${u.highscore} pts</span></li>`)
-    .join('');
-  elements.modals.leaderboard.classList.remove('hidden');
-};
-
-document.querySelectorAll('.close-modal').forEach(btn => {
-  btn.onclick = () => {
-    elements.modals.shop.classList.add('hidden');
-    elements.modals.leaderboard.classList.add('hidden');
-  };
-});
-
-// Boot
-setTimeout(() => {
-  elements.loading.classList.add('hidden');
-  const session = db.session;
-  if (session) login(session);
-  else showScreen('auth');
-}, 1500);
