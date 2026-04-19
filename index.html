@@ -221,7 +221,7 @@ const ROULETTE_PRIZES=[{label:"+50💰",credits:50,xp:0},{label:"+100💰",credi
 const ROULETTE_COLORS=["#a259ff","#7c3aed","#6d28d9","#5b21b6","#4c1d95","#3730a3","#312e81","#1e1b4b"];
 let rouletteSpinning=false;
 // INIT
-window.addEventListener('load',async()=>{const s=db.s;if(s){const users=db.u;const f=users.find(x=>x.username===s);if(f)startGame(f)}});
+window.addEventListener('load',async()=>{setTimeout(()=>{document.getElementById('loading-screen').classList.add('hidden');const s=db.s;if(s){const users=db.u;const f=users.find(x=>x.username===s);if(f){startGame(f);}else{document.getElementById('auth-screen').classList.remove('hidden');showTab('login');}}else{document.getElementById('auth-screen').classList.remove('hidden');showTab('login');}},1500);});
 // AUTH
 function showTab(t){document.getElementById('form-login').classList.toggle('hidden',t!=='login');document.getElementById('form-register').classList.toggle('hidden',t!=='register');document.getElementById('tab-login').classList.toggle('active',t==='login');document.getElementById('tab-register').classList.toggle('active',t==='register');document.getElementById('auth-error').textContent='';}
 function handleLogin(){const u=document.getElementById('login-user').value.trim();const p=document.getElementById('login-pass').value.trim();if(!u||!p)return setAuthError('Remplis tous les champs.');const users=db.u;const found=users.find(x=>x.username===u);if(!found)return setAuthError('Compte introuvable.');if(found.password!==p)return setAuthError('Mot de passe incorrect.');startGame(found);}
