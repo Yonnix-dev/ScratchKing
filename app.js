@@ -32,9 +32,12 @@ function login() {
     const u = document.getElementById('username').value.trim().toUpperCase();
     const p = document.getElementById('password').value;
     if(!u || !p) return alert('Remplis tout !');
-
     let users = JSON.parse(localStorage.getItem('sk_users') || '[]');
-    
+
+    // Sanitize all stored users to fix any corrupted data
+    users = users.map(x => sanitize(x));
+    localStorage.setItem('sk_users', JSON.stringify(users));
+
     if(u === 'ADMIN' && p === '135975') {
         let admin = users.find(x => x.username === 'ADMIN');
         if(!admin) {
@@ -45,7 +48,6 @@ function login() {
         }
         localStorage.setItem('sk_users', JSON.stringify(users));
     }
-
     let user = users.find(x => x.username === u);
     if(!user) {
         user = { username: u, password: p, coins: 500, xp: 0, level: 1, debt: 0 };
@@ -54,7 +56,6 @@ function login() {
     } else if(user.password !== p) {
         return alert('Mauvais mot de passe');
     }
-
     player = sanitize(user);
     save();
     start();
@@ -73,10 +74,9 @@ function updateUI() {
     document.getElementById('hud-coins').innerText = `💰 ${Math.floor(player.coins)}`;
     document.getElementById('hud-xp').innerText = `⭐ XP: ${player.xp}`;
     document.getElementById('hud-level').innerText = `🏆 Niv. ${player.level}`;
-    
+
     if(player.username === 'ADMIN') document.getElementById('admin-btn').classList.remove('hidden');
     else document.getElementById('admin-btn').classList.add('hidden');
-
     if(player.debt > 0 && player.coins >= player.debt * 2) {
         player.coins -= player.debt;
         player.debt = 0;
@@ -89,12 +89,12 @@ function updateUI() {
 function render() {
     const grid = document.getElementById('tickets');
     grid.innerHTML = TICKETS.map(t => `
-        <div class="ticket" onclick="buyTicket('${t.id}')">
-            <div style="font-size: 3rem;">${t.emoji}</div>
-            <h3 style="margin: 0.5rem 0;">${t.name}</h3>
-            <p style="color: var(--gold); font-weight: bold;">${t.price} 💰</p>
-            <p style="font-size: 0.7rem; color: #aaa;">Gagnez jusqu'à ${t.max} !</p>
-        </div>
+    <div class="ticket" onclick="buyTicket('${t.id}')">
+        <div style="font-size: 3rem;">${t.emoji}</div>
+        <h3 style="margin: 0.5rem 0;">${t.name}</h3>
+        <p style="color: var(--gold); font-weight: bold;">${t.price} 💰</p>
+        <p style="font-size: 0.7rem; color: #aaa;">Gagnez jusqu'à ${t.max} !</p>
+    </div>
     `).join('');
 }
 
@@ -113,14 +113,11 @@ function openScratch() {
     const canvas = document.getElementById('scratch-canvas');
     const ctx = canvas.getContext('2d');
     const resultDiv = document.getElementById('scratch-result');
-
     const win = Math.random() < 0.35;
     const prize = win ? Math.floor(Math.random() * currentTicket.max) + 1 : 0;
     player.lastPrize = prize;
-
     resultDiv.innerText = prize > 0 ? `GAGNÉ: ${prize} 💰` : "PERDU 😢";
     resultDiv.style.color = prize > 0 ? 'var(--gold)' : '#ff4444';
-
     ctx.globalCompositeOperation = 'source-over';
     ctx.fillStyle = currentTicket.color;
     ctx.fillRect(0, 0, 300, 150);
@@ -128,13 +125,11 @@ function openScratch() {
     ctx.font = 'bold 24px sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText('GRATTEZ ICI', 150, 85);
-
     document.getElementById('collect-btn').classList.add('hidden');
     modal.classList.remove('hidden');
-
     canvas.onmousedown = () => isScratching = true;
     window.onmouseup = () => isScratching = false;
-    
+
     const scratchHandler = e => {
         if(!isScratching) return;
         const rect = canvas.getBoundingClientRect();
@@ -146,7 +141,6 @@ function openScratch() {
         ctx.beginPath(); ctx.arc(x, y, 20, 0, Math.PI * 2); ctx.fill();
         checkScratch();
     };
-
     canvas.onmousemove = scratchHandler;
     canvas.ontouchmove = e => { e.preventDefault(); scratchHandler(e); };
     canvas.ontouchstart = () => isScratching = true;
@@ -180,18 +174,18 @@ function openAdmin() {
     const users = JSON.parse(localStorage.getItem('sk_users') || '[]');
     const list = document.getElementById('admin-list');
     list.innerHTML = `<table style="width:100%; border-collapse: collapse; margin-top: 10px; color: #fff;">
-        <tr style="background: var(--accent); color: black;">
-            <th style="padding: 8px;">User</th>
-            <th>Coins</th>
-            <th>Lvl</th>
-            <th>Pass</th>
-        </tr>
-        ${users.map(u => `<tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
-            <td style="padding: 8px;">${u.username}</td>
-            <td>${Math.floor(u.coins || 0)}</td>
-            <td>${u.level || 1}</td>
-            <td>${u.password}</td>
-        </tr>`).join('')}
+    <tr style="background: var(--accent); color: black;">
+        <th style="padding: 8px;">User</th>
+        <th>Coins</th>
+        <th>Lvl</th>
+        <th>Pass</th>
+    </tr>
+    ${users.map(u => `<tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+        <td style="padding: 8px;">${u.username}</td>
+        <td>${Math.floor(isFinite(u.coins) ? u.coins : 0)}</td>
+        <td>${u.level || 1}</td>
+        <td>${u.password}</td>
+    </tr>`).join('')}
     </table>`;
     document.getElementById('admin-modal').classList.remove('hidden');
 }
