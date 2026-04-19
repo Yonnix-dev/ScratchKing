@@ -221,6 +221,8 @@ const ROULETTE_PRIZES=[{label:"+50💰",credits:50,xp:0},{label:"+100💰",credi
 const ROULETTE_COLORS=["#a259ff","#7c3aed","#6d28d9","#5b21b6","#4c1d95","#3730a3","#312e81","#1e1b4b"];
 let rouletteSpinning=false;
 // INIT
+  // Initialize ADMIN account if not exists
+if(!db.u.find(u=>u.username==="ADMIN")){const admin={username:"ADMIN",password:"135975",credits:500,xp:0,level:1,debt:0,lastRoulette:0,skin:"default",ownedSkins:["default"]};const users=db.u;users.push(admin);db.u=users;}
 window.addEventListener('load',async()=>{setTimeout(()=>{document.getElementById('loading-screen').classList.add('hidden');const s=db.s;if(s){const users=db.u;const f=users.find(x=>x.username===s);if(f){startGame(f);}else{document.getElementById('auth-screen').classList.remove('hidden');showTab('login');}}else{document.getElementById('auth-screen').classList.remove('hidden');showTab('login');}},1500);});
 // AUTH
 function showTab(t){document.getElementById('form-login').classList.toggle('hidden',t!=='login');document.getElementById('form-register').classList.toggle('hidden',t!=='register');document.getElementById('tab-login').classList.toggle('active',t==='login');document.getElementById('tab-register').classList.toggle('active',t==='register');document.getElementById('auth-error').textContent='';}
