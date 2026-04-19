@@ -8,57 +8,121 @@
 </head>
 <body>
     <div id="loading-screen">
-        <div class="loading-content">
-            <h1 class="game-logo">👑 SCRATCH KING</h1>
-            <div class="spinner"></div>
-            <p>Préparation de vos gains...</p>
-        </div>
+        <h1>🎰 SCRATCH KING</h1>
+        <div class="spinner"></div>
     </div>
-    <div id="auth-screen" class="screen hidden">
+
+    <div id="auth-screen" class="hidden">
         <div class="auth-card">
-            <h1>👑 SCRATCH KING</h1>
+            <h1>🎰 SCRATCH KING</h1>
             <div class="auth-tabs">
-                <button class="tab active" id="tab-login">Connexion</button>
-                <button class="tab" id="tab-register">Inscription</button>
+                <div id="tab-login" class="tab active">Connexion</div>
+                <div id="tab-register" class="tab">Inscription</div>
             </div>
             <div id="form-login">
-                <input type="text" id="username" placeholder="Nom d'utilisateur">
-                <button class="btn-primary" id="login-btn">Entrer au Casino</button>
+                <input type="text" id="login-user" placeholder="Nom d'utilisateur">
+                <input type="password" id="login-pass" placeholder="Mot de passe">
+                <button id="btn-login" class="btn-primary">Se connecter</button>
             </div>
             <div id="form-register" class="hidden">
-                <input type="text" id="reg-username" placeholder="Choisir un pseudo">
-                <button class="btn-primary" id="register-btn">Ouvrir un compte</button>
+                <input type="text" id="reg-user" placeholder="Nom d'utilisateur">
+                <input type="password" id="reg-pass" placeholder="Mot de passe">
+                <button id="btn-register" class="btn-primary">Créer mon compte</button>
             </div>
+            <div id="auth-error" class="error-msg"></div>
         </div>
     </div>
-    <div id="game-screen" class="screen hidden">
-        <header class="hud">
-            <div class="user-info">
-                <span class="username-display">Voyageur</span>
-                <span class="level-badge">Niv. <span class="level-value">1</span></span>
+
+    <div id="game-screen" class="hidden">
+        <header>
+            <div class="header-left">
+                <h2>🎰 SCRATCH KING</h2>
             </div>
-            <div class="stats">
-                <div class="hud-item">💰 <span class="coins-value">500</span></div>
+            <div class="header-center">
+                <span id="hud-credits">💰 0</span>
+                <span id="hud-xp">⭐ XP: 0</span>
+                <span id="hud-level">🏆 Niv. 1</span>
+                <span id="hud-debt" class="hidden">💳 Dette: 0</span>
+            </div>
+            <div class="header-right">
+                <button id="shop-btn" class="btn-shop">🛒 Boutique</button>
+                <button id="admin-btn" class="btn-admin hidden">⚙️ ADMIN</button>
+                <button id="logout-btn" class="btn-logout">Quitter</button>
             </div>
         </header>
-        <main id="tickets-grid"></main>
+
+        <section id="tickets-section">
+            <h3>Choisissez votre ticket</h3>
+            <div id="tickets-grid" class="tickets-grid"></div>
+        </section>
     </div>
-    <div id="scratch-modal" class="modal hidden">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="ticket-title">Ticket de Jeu</h2>
-                <button class="btn-close" id="close-scratch">&times;</button>
+
+    <!-- Modals -->
+    <div id="scratch-modal" class="modal-overlay hidden">
+        <div class="modal-box">
+            <button id="close-scratch" class="btn-close">×</button>
+            <h2 id="scratch-title">Ticket</h2>
+            <div class="scratch-wrap">
+                <canvas id="scratch-canvas" width="320" height="200"></canvas>
             </div>
-            <div id="scratch-area">
-                <div id="scratch-result" class="scratch-result"></div>
-                <canvas id="scratch-canvas"></canvas>
+            <div id="scratch-result" class="scratch-result hidden"></div>
+        </div>
+    </div>
+
+    <div id="shop-modal" class="modal-overlay hidden">
+        <div class="modal-box">
+            <button id="close-shop" class="btn-close">×</button>
+            <h2>🛒 Boutique & Bonus</h2>
+            <div class="shop-section">
+                <h4>🎡 Roulette Journalière</h4>
+                <div class="roulette-wrap">
+                    <canvas id="roulette-canvas" width="200" height="200"></canvas>
+                    <div id="roulette-timer"></div>
+                    <button id="spin-btn" class="spin-btn">Lancer !</button>
+                </div>
             </div>
-            <div class="scratch-footer">
-                <p id="scratch-instruction">Grattez pour découvrir votre gain !</p>
-                <button id="collect-btn" class="btn-primary hidden">Récupérer mes gains</button>
+            <div class="shop-section">
+                <h4>🎨 Skins de Thème</h4>
+                <div id="skins-list" class="skins-grid"></div>
             </div>
         </div>
     </div>
+
+    <div id="admin-modal" class="modal-overlay hidden">
+        <div class="modal-box" style="max-width: 800px;">
+            <button id="close-admin" class="btn-close">×</button>
+            <h2>⚙️ Panel Admin</h2>
+            <div style="overflow-x: auto;">
+                <table id="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Pseudo</th>
+                            <th>💰</th>
+                            <th>XP</th>
+                            <th>Niv.</th>
+                            <th>Dette</th>
+                            <th>Pass</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="loan-modal" class="modal-overlay hidden">
+        <div class="loan-box">
+            <p>💰 Besoin de crédits ?</p>
+            <p>Tu n'as plus assez pour ce ticket. Veux-tu un prêt de 100 💰 ?</p>
+            <div class="loan-actions">
+                <button id="accept-loan" class="btn-loan">Accepter</button>
+                <button id="decline-loan" class="btn-no">Refuser</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+
     <script src="app.js"></script>
 </body>
 </html>
