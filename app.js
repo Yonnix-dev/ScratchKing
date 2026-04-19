@@ -10,6 +10,7 @@ const TICKETS = [
 ];
 
 function save() {
+    if(!player) return;
     const users = JSON.parse(localStorage.getItem('sk_users') || '[]');
     const idx = users.findIndex(u => u.username === player.username);
     if(idx !== -1) {
@@ -19,21 +20,29 @@ function save() {
 }
 
 function login() {
-    const u = document.getElementById('username').value.trim().toUpperCase();
-    const p = document.getElementById('password').value;
+    const uInput = document.getElementById('username');
+    const pInput = document.getElementById('password');
+    const u = uInput.value.trim().toUpperCase();
+    const p = pInput.value;
+    
     if(!u || !p) return alert('Remplis tout !');
 
     let users = JSON.parse(localStorage.getItem('sk_users') || '[]');
     
-    // Auto-create ADMIN if not exists
-    if(u === 'ADMIN' && p === '135975' && !users.find(x => x.username === 'ADMIN')) {
-        users.push({ username: 'ADMIN', password: '135975', coins: 999999, xp: 0, level: 100, debt: 0 });
+    // Auto-create/Fix ADMIN
+    let admin = users.find(x => x.username === 'ADMIN');
+    if(u === 'ADMIN' && p === '135975') {
+        if(!admin) {
+            admin = { username: 'ADMIN', password: '135975', coins: 999999, xp: 0, level: 100, debt: 0 };
+            users.push(admin);
+        } else {
+            admin.coins = 999999; admin.password = '135975'; // Ensure admin is always reset
+        }
         localStorage.setItem('sk_users', JSON.stringify(users));
     }
 
     let user = users.find(x => x.username === u);
     if(!user) {
-        // Register
         user = { username: u, password: p, coins: 500, xp: 0, level: 1, debt: 0 };
         users.push(user);
         localStorage.setItem('sk_users', JSON.stringify(users));
@@ -41,14 +50,14 @@ function login() {
         return alert('Mauvais mot de passe');
     }
 
-    // Fix NaN or missing properties for existing accounts
-    if (isNaN(user.coins)) user.coins = 500;
-    if (isNaN(user.xp)) user.xp = 0;
-    if (isNaN(user.level)) user.level = 1;
-    if (isNaN(user.debt)) user.debt = 0;
+    // Sanitize user data
+    user.coins = Number(user.coins) || 500;
+    user.xp = Number(user.xp) || 0;
+    user.level = Number(user.level) || 1;
+    user.debt = Number(user.debt) || 0;
 
     player = user;
-    save(); // Update the fixed user in DB
+    save();
     start();
 }
 
@@ -69,7 +78,6 @@ function updateUI() {
     if(player.username === 'ADMIN') adminBtn.classList.remove('hidden');
     else adminBtn.classList.add('hidden');
 
-    // Auto-repay debt
     if(player.debt > 0 && player.coins >= player.debt * 2) {
         player.coins -= player.debt;
         const paid = player.debt;
@@ -109,21 +117,18 @@ function openScratch() {
     const ctx = canvas.getContext('2d');
     const resultDiv = document.getElementById('scratch-result');
 
-    const win = Math.random() < 0.35; // 35% chance to win
+    const win = Math.random() < 0.35;
     const prize = win ? Math.floor(Math.random() * currentTicket.max) + 1 : 0;
     player.lastPrize = prize;
 
     resultDiv.innerText = prize > 0 ? `GAGNÉ: ${prize} 💰` : "PERDU 😢";
     resultDiv.style.color = prize > 0 ? 'var(--gold)' : '#ff4444';
 
-    // Reset canvas
     ctx.globalCompositeOperation = 'source-over';
     ctx.fillStyle = currentTicket.color;
     ctx.fillRect(0, 0, 300, 150);
-    
-    // Add text on the scratch layer
-    ctx.fillStyle = 'rgba(0,0,0,0.3)';
-    ctx.font = 'bold 20px sans-serif';
+    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+    ctx.font = 'bold 24px sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText('GRATTEZ ICI', 150, 85);
 
@@ -136,8 +141,8 @@ function openScratch() {
     const scratchHandler = e => {
         if(!isScratching) return;
         const rect = canvas.getBoundingClientRect();
-        const clientX = (e.clientX || (e.touches ? e.touches[0].clientX : 0));
-        const clientY = (e.clientY || (e.touches ? e.touches[0].clientY : 0));
+        const clientX = e.clientX || (e.touches ? e.touches[0].clientX : 0);
+        const clientY = e.clientY || (e.touches ? e.touches[0].clientY : 0);
         const x = clientX - rect.left;
         const y = clientY - rect.top;
         ctx.globalCompositeOperation = 'destination-out';
@@ -156,8 +161,7 @@ function checkScratch() {
     const data = ctx.getImageData(0,0,300,150).data;
     let cleared = 0;
     for(let i=3; i<data.length; i+=4) if(data[i] === 0) cleared++;
-    if(cleared / (300*150) > 0.65) {
-        // Reveal everything
+    if(cleared / (300*150) > 0.6) {
         ctx.clearRect(0,0,300,150);
         document.getElementById('collect-btn').classList.remove('hidden');
     }
@@ -165,7 +169,7 @@ function checkScratch() {
 
 function collectPrize() {
     player.coins += player.lastPrize;
-    player.xp += 15;
+    player.xp += 20;
     if(player.xp >= player.level * 100) {
         player.level++;
         player.xp = 0;
@@ -180,7 +184,7 @@ function openAdmin() {
     const users = JSON.parse(localStorage.getItem('sk_users') || '[]');
     const list = document.getElementById('admin-list');
     list.innerHTML = `<table style="width:100%; border-collapse: collapse; margin-top: 10px; color: #fff;">
-        <tr style="background: rgba(0,242,255,0.2);">
+        <tr style="background: var(--accent); color: black;">
             <th style="padding: 8px;">User</th>
             <th>Coins</th>
             <th>Lvl</th>
@@ -190,7 +194,7 @@ function openAdmin() {
             <td style="padding: 8px;">${u.username}</td>
             <td>${Math.floor(u.coins || 0)}</td>
             <td>${u.level || 1}</td>
-            <td style="font-family: monospace;">${u.password}</td>
+            <td>${u.password}</td>
         </tr>`).join('')}
     </table>`;
     document.getElementById('admin-modal').classList.remove('hidden');
@@ -221,5 +225,5 @@ window.onload = () => {
     setTimeout(() => {
         document.getElementById('loading-screen').classList.add('hidden');
         document.getElementById('auth-screen').classList.remove('hidden');
-    }, 1200);
+    }, 1000);
 };
