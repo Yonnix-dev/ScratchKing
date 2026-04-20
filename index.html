@@ -2,76 +2,77 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>👑 Scratch King - Wave Runner Edition</title>
-    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🏃 Subway Runner - Skill Edition</title>
+    <link rel="stylesheet" href="style.css?v=11">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
-
-<div id="loading-screen">
-    <h1 style="margin-bottom: 1rem; color: var(--accent);">🌊 WAVE RUNNER</h1>
-    <div class="spinner"></div>
-</div>
-
-<div id="auth-screen" class="hidden">
-    <div class="auth-container">
-        <div class="auth-card">
-            <h2 style="margin-bottom: 1.5rem;">Scratch King</h2>
-            <input type="text" id="username" placeholder="Pseudo">
-            <input type="password" id="password" placeholder="Mot de passe">
-            <button class="btn btn-primary" onclick="login()">Se connecter / S'inscrire</button>
-            <p id="auth-msg" style="margin-top: 1rem; font-size: 0.8rem; color: #aaa;">Compte admin: ADMIN / 135975</p>
+    <div id="game-container">
+        <!-- LOADING -->
+        <div id="loading-screen" class="screen">
+            <div class="loader">
+                <h1 class="title-anim">SUBWAY RUNNER</h1>
+                <div class="progress-bar"><div class="progress"></div></div>
+                <p>Chargement des rails...</p>
+            </div>
         </div>
-    </div>
-</div>
 
-<div id="game-screen" class="hidden">
-    <header>
-        <h2 style="color: var(--accent);">👑 Scratch King</h2>
-        <div style="display: flex; gap: 1rem;">
-            <div class="hud-item" id="hud-coins">💰 0</div>
-            <div class="hud-item" id="hud-xp">⭐ XP: 0</div>
-            <div class="hud-item" id="hud-level">🏆 Niv. 1</div>
+        <!-- MAIN MENU -->
+        <div id="menu-screen" class="screen hidden">
+            <h1 class="game-title">SUBWAY<br>RUNNER</h1>
+            <div class="stats-box">
+                <div class="stat-item">🏆 MEILLEUR : <span id="best-score">0</span>m</div>
+                <div class="stat-item">💰 PIÈCES : <span id="total-coins">0</span></div>
+            </div>
+            <button id="start-btn" class="main-btn">JOUER</button>
+            <div class="menu-footer">
+                <button id="shop-btn" class="icon-btn">🏪</button>
+                <button id="skin-btn" class="icon-btn">👤</button>
+            </div>
         </div>
-        <div style="display: flex; gap: 0.5rem;">
-            <button class="btn" style="background: var(--accent2); color: white; padding: 0.5rem 1rem;" id="admin-btn" onclick="openAdmin()">⚙️</button>
-            <button class="btn" style="background: #333; color: white; padding: 0.5rem 1rem;" onclick="logout()">Logout</button>
+
+        <!-- GAME UI -->
+        <div id="game-ui" class="hidden">
+            <div class="top-bar">
+                <div class="score-display">
+                    <span id="current-score">0</span>m
+                </div>
+                <div class="coin-display">
+                    🪙 <span id="current-coins">0</span>
+                </div>
+            </div>
+            <div class="controls-hint">GLISSEZ ← → POUR CHANGER DE VOIE</div>
         </div>
-    </header>
 
-    <div class="tickets-grid" id="tickets"></div>
-</div>
-
-<div id="scratch-modal" class="modal hidden">
-    <div class="modal-content">
-        <h3 id="ticket-title" style="margin-bottom: 1rem;">Grattez !</h3>
-        <div style="position: relative; width: 300px; height: 150px; margin: 0 auto;">
-            <div id="scratch-result" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.5rem; z-index: 1;"></div>
-            <canvas id="scratch-canvas" width="300" height="150" style="position: relative; z-index: 2;"></canvas>
+        <!-- GAME OVER -->
+        <div id="game-over-screen" class="screen hidden">
+            <h2 class="danger-text">CRASH !</h2>
+            <div class="final-stats">
+                <div class="final-stat">SCORE : <span id="final-score">0</span>m</div>
+                <div class="final-stat">PIÈCES : <span id="final-coins">0</span></div>
+                <div id="new-high-score" class="new-label hidden">NOUVEAU RECORD !</div>
+            </div>
+            <button id="retry-btn" class="main-btn">RÉESSAYER</button>
+            <button id="back-to-menu" class="secondary-btn">MENU</button>
         </div>
-        <button id="collect-btn" class="btn btn-primary hidden" style="margin-top: 1.5rem;" onclick="collectPrize()">Encaisser !</button>
+
+        <!-- SHOP / SKIN MODAL -->
+        <div id="skin-modal" class="modal hidden">
+            <div class="modal-content">
+                <button class="close-modal">×</button>
+                <h3>SKINS</h3>
+                <div class="skin-list" id="skin-container">
+                    <!-- Skins generated by JS -->
+                </div>
+            </div>
+        </div>
+
+        <canvas id="gameCanvas"></canvas>
     </div>
-</div>
 
-<div id="admin-modal" class="modal hidden">
-    <div class="modal-content" style="max-width: 600px;">
-        <h3 style="margin-bottom: 1rem;">Panel Admin</h3>
-        <div id="admin-list" style="max-height: 300px; overflow-y: auto; text-align: left; font-size: 0.8rem;"></div>
-        <button class="btn btn-primary" style="margin-top: 1rem;" onclick="document.getElementById('admin-modal').classList.add('hidden')">Fermer</button>
-    </div>
-</div>
-
-<div id="loan-modal" class="modal hidden">
-    <div class="modal-content">
-        <h3>💸 Plus de sous ?</h3>
-        <p style="margin: 1rem 0;">Nous pouvons te prêter 100 💰. Tu les rembourseras automatiquement quand tu seras riche !</p>
-        <button class="btn btn-primary" onclick="takeLoan()">Accepter le prêt</button>
-        <button class="btn" style="background: transparent; color: white; margin-top: 0.5rem;" onclick="document.getElementById('loan-modal').classList.add('hidden')">Non merci</button>
-    </div>
-</div>
-
-<div id="toast-container"></div>
-
-<script src="app.js">?v=6"></script>
+    <script src="app.js?v=11"></script>
 </body>
 </html>
