@@ -3,55 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>🏃 Subway Runner</title>
-    <link rel="stylesheet" href="style.css?v=14">
-    <link href="https://fonts.googleapis.com/css2?family=Bungee&display=swap" rel="stylesheet">
+    <title>🎰 Cyber Casino Tycoon</title>
+    <link rel="stylesheet" href="style.css?v=21">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div id="game-container">
-        <!-- MENU -->
-        <div id="menu-screen" class="screen">
-            <h1 class="game-title">SUBWAY<br>RUNNER</h1>
-            <div class="stats-box">
-                <div>🏆 MEILLEUR : <span id="best-score">0</span>m</div>
-                <div>💰 PIÈCES : <span id="total-coins">0</span></div>
+        <!-- HEADER -->
+        <header>
+            <div class="logo">
+                <span class="cyber">CYBER</span><span class="casino">CASINO</span>
             </div>
-            <button id="start-btn" class="main-btn">JOUER</button>
-            <div class="menu-footer">
-                <button id="shop-btn" class="icon-btn">🏪 SHOP</button>
+            <div class="stats">
+                <div class="stat-item">
+                    <span class="label">CREDITS</span>
+                    <span id="stat-credits" class="value">1000</span>
+                </div>
+                <div class="stat-item">
+                    <span class="label">REVENUE</span>
+                    <span id="stat-revenue" class="value">0</span><span class="unit">/s</span>
+                </div>
             </div>
-        </div>
+        </header>
 
-        <!-- GAME UI -->
-        <div id="game-ui" class="hidden">
-            <div class="top-bar">
-                <span id="current-score">0</span>m | 🪙 <span id="current-coins">0</span>
-            </div>
-        </div>
+        <!-- MAIN CONTENT -->
+        <main>
+            <!-- LOBBY SCREEN -->
+            <div id="lobby-screen" class="screen active">
+                <div class="section-title">🎰 TABLES DE JEU</div>
+                <div id="tables-grid" class="grid">
+                    <!-- Tables will be injected here -->
+                </div>
 
-        <!-- GAME OVER -->
-        <div id="game-over-screen" class="screen hidden">
-            <h2 class="danger-text">CRASH !</h2>
-            <div class="final-stats">
-                <div>SCORE : <span id="final-score">0</span>m</div>
-                <div>PIÈCES : <span id="final-coins">0</span></div>
+                <div class="section-title">🚀 AMÉLIORATIONS</div>
+                <div id="upgrades-grid" class="grid">
+                    <!-- Upgrades will be injected here -->
+                </div>
             </div>
-            <button id="retry-btn" class="main-btn">RÉESSAYER</button>
-            <button id="back-to-menu" class="secondary-btn">MENU</button>
-        </div>
 
-        <!-- SHOP -->
-        
-        <div id="skin-modal" class="modal hidden">
-            <div class="modal-content">
-                <button class="close-modal">×</button>
-                <h3>SKINS</h3>
-                <div class="skin-list" id="skin-container"></div>
+            <!-- SLOT MACHINE SCREEN -->
+            <div id="slot-screen" class="screen hidden">
+                <div class="view-header">
+                    <button class="back-btn" onclick="showScreen('lobby-screen')">← RETOUR AU LOBBY</button>
+                    <h2>MACHINE À SOUS</h2>
+                </div>
+                <div class="slot-container">
+                    <div class="slot-machine">
+                        <div class="reels">
+                            <div id="reel1" class="reel">💎</div>
+                            <div id="reel2" class="reel">💎</div>
+                            <div id="reel3" class="reel">💎</div>
+                        </div>
+                        <div id="slot-result" class="result">CYBER JACKPOT</div>
+                        <div class="controls">
+                            <button id="spin-btn" class="cyber-btn" onclick="spin()">SPIN (10 🪙)</button>
+                        </div>
+                    </div>
+                    <div class="paytable">
+                        <h3>PAYMENTS</h3>
+                        <p>💎💎💎 : 1000 🪙</p>
+                        <p>7️⃣7️⃣7️⃣ : 200 🪙</p>
+                        <p>🍒🍒🍒 : 50 🪙</p>
+                        <p>2 PARES : 20 🪙</p>
+                    </div>
+                </div>
             </div>
-        </div>
+        </main>
 
-        <canvas id="gameCanvas"></canvas>
+        <div id="notif-container"></div>
     </div>
-    <script src="app.js?v=14"></script>
+
+    <script src="app.js?v=21"></script>
 </body>
 </html>
